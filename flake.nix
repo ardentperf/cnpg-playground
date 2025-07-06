@@ -36,6 +36,8 @@
         pkgs.k9s
         pkgs.lazydocker
         pkgs.btop
+        pkgs.lazygit
+        pkgs.gh
      ];
     };
   });
