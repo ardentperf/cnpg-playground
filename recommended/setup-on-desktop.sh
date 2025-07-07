@@ -61,7 +61,7 @@ echo "Setting KUBECONFIG to $SCRIPT_DIR/k8s/kube-config.yaml"
 export KUBECONFIG=$SCRIPT_DIR/k8s/kube-config.yaml
 cd $SCRIPT_DIR
 # Only auto-enter nix develop if not already inside, and only for login interactive shells
-if [ -z "$IN_NIX_SHELL" ] && [ -z "$CNPG_DEV_ENTERED" ] && [[ $- == *i* ]]; then
+if [ -z "\$IN_NIX_SHELL" ] && [ -z "\$CNPG_DEV_ENTERED" ] && [[ "\$-" == *i* ]]; then
     export CNPG_DEV_ENTERED=1
     echo "Entering nix development environment..."
     if nix develop .; then
