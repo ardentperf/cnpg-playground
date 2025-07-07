@@ -18,6 +18,12 @@
         alias k=kubectl
         complete -o default -F __start_kubectl k
 
+        # setup 'c/n' as 'kubectx/kubens' aliases
+        alias c=kubectx
+        complete -F _kube_contexts c
+        alias n=kubens
+        complete -F _kube_namespaces n
+
         # Setup 'kc' as a 'kubectl cnpg' alias
         source <(kubectl cnpg completion bash)
         alias kc="kubectl cnpg"
