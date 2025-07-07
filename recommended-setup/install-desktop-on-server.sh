@@ -72,7 +72,7 @@ for attempt in 1 2; do
     gsettings set org.gnome.shell.extensions.dash-to-dock dock-position LEFT
 
     # Set favorite applications
-    gsettings set org.gnome.shell favorite-apps "['firefox_firefox.desktop', 'libreoffice-writer.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Software.desktop', 'org.gnome.Terminal.desktop']"
+    gsettings set org.gnome.shell favorite-apps "['firefox_firefox.desktop', 'org.gnome.Nautilus.desktop', 'snap-store_snap-store.desktop', 'yelp.desktop', 'org.gnome.Terminal.desktop']"
 
     # Set backgrounds (default Ubuntu wallpaper)
     gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/warty-final-ubuntu.png'
