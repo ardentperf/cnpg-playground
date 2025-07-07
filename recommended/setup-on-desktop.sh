@@ -56,15 +56,21 @@ EOF
 
 # Set KUBECONFIG and auto-enters the nix development environment on login.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cat <<EOF >> ~/.bash_profile
+cat <<EOF >> ~/.bashrc
 echo "Setting KUBECONFIG to $SCRIPT_DIR/k8s/kube-config.yaml"
 export KUBECONFIG=$SCRIPT_DIR/k8s/kube-config.yaml
 cd $SCRIPT_DIR
-echo "Entering nix development environment..."
-if nix develop .; then
-    echo "nix develop . completed successfully."
+# Only auto-enter nix develop if not already inside, and only for login interactive shells
+if [ -z "$IN_NIX_SHELL" ] && [ -z "$CNPG_DEV_ENTERED" ] && [[ $- == *i* ]]; then
+    export CNPG_DEV_ENTERED=1
+    echo "Entering nix development environment..."
+    if nix develop .; then
+        echo "nix develop . completed successfully."
+    else
+        echo "nix develop . failed. Please check the output above for errors."
+    fi
 else
-    echo "nix develop . failed. Please check the output above for errors."
+    echo "Already inside a nix environment or already entered. Skipping 'nix develop .'."
 fi
 EOF
 
