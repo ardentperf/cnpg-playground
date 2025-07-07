@@ -19,8 +19,10 @@
         complete -o default -F __start_kubectl k
 
         # setup 'c/n' as 'kubectx/kubens' aliases
+        source /nix/store/*-kubectx-*/share/bash-completion/completions/kubectx.bash
         alias c=kubectx
         complete -F _kube_contexts c
+        source /nix/store/*-kubectx-*/share/bash-completion/completions/kubens.bash
         alias n=kubens
         complete -F _kube_namespaces n
 
