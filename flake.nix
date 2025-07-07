@@ -32,6 +32,7 @@
         pkgs.curl
         pkgs.kubectl-cnpg
         pkgs.kubectl-view-secret
+        pkgs.stern
         pkgs.cmctl
         pkgs.k9s
         pkgs.lazydocker
