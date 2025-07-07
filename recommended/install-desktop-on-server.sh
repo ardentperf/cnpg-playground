@@ -82,8 +82,16 @@ for attempt in 1 2; do
     gsettings set org.gnome.desktop.screensaver picture-uri 'file:///usr/share/backgrounds/warty-final-ubuntu.png'
     gsettings set org.gnome.desktop.screensaver primary-color '#2c001e'
     gsettings set org.gnome.desktop.screensaver secondary-color '#2c001e'
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-    gsettings set org.gnome.desktop.interface color-scheme 'default'
+
+    # Check the current color-scheme, toggle it away, then back (to ensure background settings take effect)
+    current_scheme=$(gsettings get org.gnome.desktop.interface color-scheme)
+    if [ "$current_scheme" = "'prefer-dark'" ]; then
+        gsettings set org.gnome.desktop.interface color-scheme 'default'
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+    else
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+        gsettings set org.gnome.desktop.interface color-scheme 'default'
+    fi
 
     # If this is the first attempt, wait 4 minutes before trying again
     if [ $attempt -eq 1 ]; then
