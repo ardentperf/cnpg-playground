@@ -44,6 +44,19 @@ fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
 EOF
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cat <<EOF >> ~/.bash_profile
+echo "Setting KUBECONFIG to $SCRIPT_DIR/k8s/kube-config.yaml"
+export KUBECONFIG=$SCRIPT_DIR/k8s/kube-config.yaml
+cd $SCRIPT_DIR
+echo "Entering nix development environment..."
+if nix develop .; then
+    echo "nix develop . completed successfully."
+else
+    echo "nix develop . failed. Please check the output above for errors."
+fi
+EOF
+
 echo "Setup complete! You need to restart the system for all changes to take effect. (In particular, the current user needs to be added to the docker group.)"
 echo .
 echo "Press Enter to reboot the system, or Ctrl+C to cancel..."
