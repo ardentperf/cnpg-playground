@@ -26,6 +26,7 @@
 
       packages = [
         pkgs.kubectl
+        pkgs.kubectx
         pkgs.kubernetes-helm
         pkgs.kind
         pkgs.jq
