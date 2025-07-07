@@ -35,6 +35,8 @@ sudo usermod -aG docker $USER
 
 echo experimental-features = nix-command flakes | sudo tee -a /etc/nix/nix.conf
 
+sudo usermod -aG nix-users $USER
+
 sudo tee /etc/sysctl.d/99-inotify.conf <<EOF
 fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
