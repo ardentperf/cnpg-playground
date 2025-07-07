@@ -1,4 +1,4 @@
-# Recommended Setup
+# Recommended Learning Environment
 
 ```
 4 CPUs, 16GB memory, 100GB disk
@@ -124,6 +124,49 @@ encounter.
 
 # Setup Instructions
 
+The `setup-on-desktop-sh` script will automatically install and configure
+everything needed for **`cnpg-playground`** on a clean installation of a
+Ubuntu 25.04 Desktop.
+
+```bash
+git clone https://github.com/ardentperf/cnpg-playground
+cd cnpg-playground
+git checkout tmp-work
+
+bash recommended/setup-on-desktop.sh
+```
+
+When the script completes, it will reboot the server. After you reconnect,
+terminals will automatically use `nix` to enter an environment will all of
+the tools needed for learning.
+
+After reconnecting, you can create the learning environment.
+
+```bash
+# create kubernetes infrastructure
+scripts/setup.sh
+
+export KUBECONFIG=/home/$USER/cnpg-playground/k8s/kube-config.yaml
+
+# create CloudNativePG clusters (there may be an issue with the new backup plugin at the moment?)
+LEGACY=true demo/setup.sh
+```
+
+A few useful tools to start exploring include `btop` to monitor server
+utilization, `lazydocker` to monitor the docker pods (aka k8s nodes),
+and `k9s` to explore the kubernetes clusters themselves.
+
+Some aliases are preconfigured:
+* `k` for `kubectl`
+* `kc` for `kubectl cnpg`
+* `c` for `kubectx`
+* `n` for `kubens`
+
+Auto-completion is configured for most commands and alaises.
+
+
+## Operating System Installation using official Ubuntu Desktop Installer
+
 If you're running in a Virtual Machine on your Windows or Mac laptop or if
 you're running directly on a well support laptop (like a Thinkpad) then
 download the Ubuntu Desktop 25.04 Installer ISO and use that to directly
@@ -144,7 +187,7 @@ time to test GCP then I'll add instructions for it too.
 There are a few glitches with this unsupported and unofficial Ubuntu RDP
 desktop setup, but it works well enough for our purposes.
 
-## AWS Setup
+## AWS Ubuntu Server Creation
 
 Create an EC2 instance with Ubuntu 25.04 on ARM64 architecture. The
 instance will be tagged with the name "cnpg1" for easy identification.
@@ -227,7 +270,7 @@ aws ec2 terminate-instances --region $REGION --instance-ids $INSTANCE_ID
 ```
 
 
-## Azure Setup
+## Azure Ubuntu Server Creation
 
 Create a VM with Ubuntu 25.04 on ARM64 architecture in a new resource
 group. The VM will be accessible via SSH and RDP.
@@ -311,7 +354,7 @@ az network public-ip delete --name ${VM_NAME}PublicIP --resource-group $RESOURCE
 az group delete --name $RESOURCE_GROUP --yes
 ```
 
-## GCP Setup
+## GCP Ubuntu Server Creation
 
 The AWS and Azure setups have been tested fairly thoroughly; if I find time to
 test GCP then I'll add instructions for it too.
