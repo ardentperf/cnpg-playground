@@ -22,14 +22,16 @@ gsettings set org.gnome.shell favorite-apps "['firefox_firefox.desktop', 'org.gn
 
 sudo apt install docker.io nix-bin -y
 
-# Create a systemd service to set the proxy
-sudo mkdir -vp /etc/systemd/system/docker.service.d
-sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf <<EOF
+if [[ "$use_proxy" == "y" || "$use_proxy" == "yes" ]]; then
+    # Create a systemd service to set the proxy
+    sudo mkdir -vp /etc/systemd/system/docker.service.d
+    sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf <<EOF
 [Service]
 Environment="HTTP_PROXY=http://$proxy_ip:8080"
 Environment="HTTPS_PROXY=http://$proxy_ip:8080"
 Environment="NO_PROXY=localhost,127.0.0.0/8,::1"
 EOF
+fi
 
 sudo usermod -aG docker $USER
 
