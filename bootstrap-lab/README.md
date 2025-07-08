@@ -49,7 +49,7 @@ the recommended specs, and you will need to leave enough resources for
 everything else running on your laptop. When configuring the VM, if you are
 asked to set a CPU count, assign `4 CPUs` to the VM. As with cloud environments,
 you are assigning virtual CPUs—not physical cores—to your virtual machine.
-VirtualBox, UTM (on mac) and WSL (onwindows) should all work for installing
+VirtualBox, UTM (on mac) and WSL (on windows) should all work for installing
 and running Ubuntu in a VM.*
 
 ## 🎯 Getting Started
