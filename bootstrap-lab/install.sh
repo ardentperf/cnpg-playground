@@ -63,6 +63,9 @@ fi
 echo "Starting installation at: $(date)"
 echo .
 
+# Enable strict error handling for the installation phase
+set -euo pipefail
+
 sudo apt-get update
 sudo apt-get upgrade -y
 
