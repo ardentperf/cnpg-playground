@@ -2,8 +2,9 @@
 
 ```
 4 CPUs, 16GB memory, 100GB disk
-Ubuntu 25.04 Desktop
-Working internet connection (proxies and custom CAs are supported)
+Ubuntu 24.04.x LTS Server
+Outbound internet connection (proxies and custom CAs are supported)
+Inbound ports 22 and 3389
 ```
 
 *Rule of thumb for "what is a CPU":*
