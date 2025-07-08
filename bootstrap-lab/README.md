@@ -404,7 +404,7 @@ ssh azureuser@172.184.113.71
 **Simple approach (recommended):**
 
 ```bash
-RESOURCE_GROUP="cnpg1"
+RESOURCE_GROUP=cnpg1
 ```
 
 This will delete the VM and all associated resources in one command
