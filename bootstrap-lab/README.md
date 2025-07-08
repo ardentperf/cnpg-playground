@@ -37,10 +37,20 @@ Outbound internet connection (proxies and custom CAs are supported)
 Inbound ports 22 and 3389
 ```
 
-*Rule of thumb for "what is a CPU":*
-* *In cloud environments, count vCPUs.*
-* *On your own hardware, count physical cores (not smt threads or operating
-  system CPUs).*
+Rule of thumb for "what is a CPU":
+* In cloud environments, count vCPUs.
+* On your own hardware, count physical cores (not smt threads or operating
+  system CPUs).
+
+*If you are running this in a Virtual Machine on your Windows or Mac laptop,
+your laptop itself should have at least `6 physical cores`, `24GB memory`,
+and `150GB available storage`. The Virtual Machine you create needs to match
+the recommended specs, and you will need to leave enough resources for
+everything else running on your laptop. When configuring the VM, if you are
+asked to set a CPU count, assign `4 CPUs` to the VM. As with cloud environments,
+you are assigning virtual CPUs—not physical cores—to your virtual machine.
+VirtualBox, UTM (on mac) and WSL (onwindows) should all work for installing
+and running Ubuntu in a VM.*
 
 ## 🎯 Getting Started
 
@@ -156,27 +166,7 @@ to run **`cnpg-playground`** in these environments too, and these ubuntu
 automation scripts will handle it if needed.
 
 
-# Detailed Requirements and Cost Estimates
-
-## Running in a Virtual Machine on your Windows or Mac laptop (for free)
-
-Your laptop itself should have at least `6 physical cores, 24GB memory, 150GB
-available storage`. The Virtual Machine that you create is what needs to match
-the recommended specs and you need leftover resources for everything else
-you're running on your laptop.
-
-Check your hardware specs because the number of CPUs visible in
-windows/macos is often much higher than the real number of cores (due to
-SMT or hyperthreading).
-
-If you are required to configure a CPU count when creating a virtual
-machine, then assign `4 CPUs` to the VM. Similar to cloud environments,
-you're assigning virtual CPUs - not cores - into your virtual machine.
-
-VirtualBox, UTM (on mac) and WSL (on windows) should all work for installing
-and running Ubuntu in a VM.
-
-## Cloud pricing (US Dollars)
+## Cost estimate for using the cloud (US Dollars)
 
 *For "US East 1" region as of 6-July-2025*
 
@@ -197,7 +187,7 @@ bursting instance families (but keep an eye on your cpu usage and your
 instance's baseline utilization for burst) or lower cost instance families
 like GCP's E2 family.
 
-## Pricing for hardware to directly run Ubuntu (US Dollars)
+## Cost estimate for buying hardware to directly run Ubuntu (US Dollars)
 
 If you want an environment that can be left running more than a month or two
 then you can probably save money by purchasing hardware.
