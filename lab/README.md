@@ -61,7 +61,7 @@ git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground 
 ```
 
 ```bash
-bash bootstrap-lab/install.sh
+bash lab/install.sh
 ```
 
 Installation time tends to run around 10-15 minutes.
