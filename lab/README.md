@@ -68,7 +68,7 @@ Installation time tends to run around 10-15 minutes.
 
 When the script completes, it will reboot the server. After the reboot, you
 can connect with either SSH or RDP and all terminals will automatically use a
-`nix` devshell to enter an environment will tools for learning and exploring.
+`nix` devshell to enter an environment with tools for learning and exploring.
 
 Run this command to create infrastructure including S3-compatible storage and
 kubernetes clusters named `kind-k8s-eu` and `kind-k8s-us`:
