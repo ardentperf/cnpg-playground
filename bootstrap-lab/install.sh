@@ -45,11 +45,6 @@ else
 fi
 echo .
 
-# Add timestamp to the installation log
-echo "Starting installation at: $(date)"
-echo .
-
-
 # Prompt the user to configure a proxy if needed for internet access. (Optional)
 gateway=$(ip route | awk '/default/ {print $3}')
 read -p "Do you need to configure a proxy for internet access? [y/N]: " use_proxy
@@ -62,6 +57,11 @@ if [[ "$use_proxy" == "y" || "$use_proxy" == "yes" ]]; then
     proxy_port=${proxy_port:-9000}
     echo "Proxy will be set to: http://$proxy_ip:$proxy_port/"
 fi
+
+
+# Add timestamp to the installation log
+echo "Starting installation at: $(date)"
+echo .
 
 sudo apt-get update
 sudo apt-get upgrade -y
