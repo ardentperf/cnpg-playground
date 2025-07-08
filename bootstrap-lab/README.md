@@ -54,6 +54,8 @@ git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground 
 bash bootstrap-lab/install.sh
 ```
 
+Installation time tends to run around 10-15 minutes.
+
 When the script completes, it will reboot the server. After the reboot, you
 can connect with either SSH or RDP and all terminals will automatically use a
 `nix` devshell to enter an environment will tools for learning and exploring.
