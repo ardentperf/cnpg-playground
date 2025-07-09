@@ -16,14 +16,22 @@ echo "You are logged in as: $USER"
 echo "Starting script execution at: $(date)"
 echo .
 
-# Check if we're running on Ubuntu 25.04
+# Check if we're running on Ubuntu 25.04 Server
 if ! grep -q "Ubuntu 25.04" /etc/os-release; then
-    echo "ERROR: This script is designed for Ubuntu 25.04 only."
+    echo "ERROR: This script is designed for Ubuntu 25.04 Server only."
     echo "Current OS: $(grep PRETTY_NAME /etc/os-release | cut -d'"' -f2)"
-    echo "Please run this script on Ubuntu 25.04."
+    echo "Please run this script on Ubuntu 25.04 Server."
     exit 1
 fi
-echo "✓ Confirmed: Running on Ubuntu 25.04"
+
+# Check if this is a server installation (not desktop)
+if dpkg -l | grep -q "^ii.*xorg"; then
+    echo "ERROR: This script is designed for Ubuntu 25.04 Server installations only."
+    echo "Detected X11/Xorg installation. Please use Ubuntu 25.04 Server instead."
+    exit 1
+fi
+
+echo "✓ Confirmed: Running on Ubuntu 25.04 Server"
 echo .
 
 # Check if the current user has a password set by examining /etc/shadow
@@ -94,6 +102,74 @@ sudo usermod -aG nix-users $USER
 sudo tee /etc/sysctl.d/99-inotify.conf <<EOF
 fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
+EOF
+
+mkdir -vp $HOME/.local/share/applications
+mkdir -vp $HOME/.config/autostart
+ln -svf /var/lib/snapd/desktop/applications/firefox_firefox.desktop $HOME/.local/share/applications/firefox.desktop
+ln -svf /var/lib/snapd/desktop/applications/firefox_firefox.desktop $HOME/.config/autostart/
+# Remove existing Firefox profile(s) for this user, then create a new default profile (snap install)
+FIREFOX_PROFILE_DIR="$HOME/snap/firefox/common/.mozilla/firefox"
+if [ -d "$FIREFOX_PROFILE_DIR" ]; then
+    echo "Removing existing Firefox profiles (snap)..."
+    rm -rf "$FIREFOX_PROFILE_DIR"
+fi
+echo "Creating new default Firefox profile (snap)..."
+snap run firefox --headless --createprofile "default" >/dev/null 2>&1
+# Find the new profile directory
+PROFILE_INI="$FIREFOX_PROFILE_DIR/profiles.ini"
+if [ -f "$PROFILE_INI" ]; then
+    PROFILE_PATH=$(awk -F= '/^Path=/{print $2; exit}' "$PROFILE_INI")
+    PROFILE_DIR="$FIREFOX_PROFILE_DIR/$PROFILE_PATH"
+    if [ -d "$PROFILE_DIR" ]; then
+        # Write a new user.js to set homepage and startup behavior
+        USER_JS="$PROFILE_DIR/user.js"
+        HOMEPAGE_URL="https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md"
+        cat > "$USER_JS" <<EOF
+user_pref("browser.startup.page", 1); // 1 = home page, 0 = blank page
+user_pref("browser.startup.homepage", "$HOMEPAGE_URL"); // Set the homepage URL
+user_pref("browser.aboutwelcome.enabled", false); // Disable the new-style about:welcome
+user_pref("browser.startup.homepage_override.mstone", "ignore"); // Skip the "What's New" page
+user_pref("startup.homepage_welcome_url", "$HOMEPAGE_URL"); // Set the welcome URL
+EOF
+        echo "Firefox profile (snap) configured with custom homepage via user.js."
+    else
+        echo "Could not find Firefox profile directory (snap). Skipping homepage configuration."
+    fi
+else
+    echo "Could not find profiles.ini (snap). Skipping Firefox homepage configuration."
+fi
+
+# Create a script to configure desktop settings in user's home directory
+cat > ~/configure-desktop.sh << 'EOF'
+#!/bin/bash
+LOGFILE="$HOME/configure-desktop-$(date +%Y%m%d_%H%M%S).log"
+exec > >(tee -a "$LOGFILE") 2>&1
+echo "[$(date)] Starting configure-desktop.sh"
+sleep 30
+# Launch gnome-terminal once to trigger profile creation
+gnome-terminal --window -- bash -c "exit"
+sleep 1  # give it a moment to write to dconf
+default_uuid=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d \')
+# Set GNOME Terminal profile colors and options
+# Set background color (dark), foreground color (light), bold-is-bright, and use-theme-colors
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" background-color 'rgb(23,20,33)'
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" foreground-color 'rgb(208,207,204)'
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" bold-is-bright true
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" use-theme-colors false
+EOF
+# Make the script executable
+chmod +x ~/configure-desktop.sh
+# Add the script to autostart for GNOME session
+mkdir -vp ~/.config/autostart
+cat > ~/.config/autostart/configure-desktop.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Configure Desktop
+Exec=/home/$USER/configure-desktop.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
 EOF
 
 # Set KUBECONFIG and auto-enters the nix development environment on login.
