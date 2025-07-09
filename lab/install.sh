@@ -25,7 +25,7 @@ if ! grep -q "Ubuntu 25.04" /etc/os-release; then
 fi
 
 # Check if this is a server installation (not desktop)
-if dpkg -l | awk '$1 == "ii" && $2 ~ /^xorg/ {exit 1}'; then
+if dpkg -l | awk '$1 == "ii" && $2 ~ /^xorg/ {found=1} END {exit !found}'; then
     echo "ERROR: This script is designed for Ubuntu 25.04 Server installations only."
     echo "Detected X11/Xorg installation. Please use Ubuntu 25.04 Server instead."
     exit 1
