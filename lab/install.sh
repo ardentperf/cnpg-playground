@@ -124,7 +124,7 @@ if [ -f "$PROFILE_INI" ]; then
     if [ -d "$PROFILE_DIR" ]; then
         # Write a new user.js to set homepage and startup behavior
         USER_JS="$PROFILE_DIR/user.js"
-        HOMEPAGE_URL="https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md"
+        HOMEPAGE_URL="https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md#cloudnativepg-lab"
         cat > "$USER_JS" <<EOF
 user_pref("browser.startup.page", 1); // 1 = home page, 0 = blank page
 user_pref("browser.startup.homepage", "$HOMEPAGE_URL"); // Set the homepage URL
