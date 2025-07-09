@@ -131,6 +131,7 @@ user_pref("browser.startup.homepage", "$HOMEPAGE_URL"); // Set the homepage URL
 user_pref("browser.aboutwelcome.enabled", false); // Disable the new-style about:welcome
 user_pref("browser.startup.homepage_override.mstone", "ignore"); // Skip the "What's New" page
 user_pref("startup.homepage_welcome_url", "$HOMEPAGE_URL"); // Set the welcome URL
+user_pref("datareporting.policy.firstRunURL", ""); // Blank out first-run URL
 EOF
         echo "Firefox profile (snap) configured with custom homepage via user.js."
     else
