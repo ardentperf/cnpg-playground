@@ -34,7 +34,7 @@ It sets up:
 4 CPUs, 16GB memory, 100GB disk
 Ubuntu 25.04 Server (fresh install)
 Outbound internet connection (proxies and custom CAs are supported)
-Inbound ports 22 and 3389
+Inbound ports 22 and 3389 (port forwarding is fine)
 ```
 
 Rule of thumb for "what is a CPU":
