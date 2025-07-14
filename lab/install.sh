@@ -115,7 +115,7 @@ if [ -d "$FIREFOX_PROFILE_DIR" ]; then
     rm -rf "$FIREFOX_PROFILE_DIR"
 fi
 echo "Creating new default Firefox profile (snap)..."
-snap run firefox --headless --createprofile "default" >/dev/null 2>&1
+snap run firefox --headless --createprofile "default"
 # Find the new profile directory
 PROFILE_INI="$FIREFOX_PROFILE_DIR/profiles.ini"
 if [ -f "$PROFILE_INI" ]; then
