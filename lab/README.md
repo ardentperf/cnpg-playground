@@ -128,7 +128,9 @@ database. While it's possible to forward ports and use a browser elsewhere,
 having a desktop environment simplifies things and provides a more consistent
 experience. We can more easily share demos and screenshots and experiments
 when we minimize the differences in how we're doing things. It minimizes
-variation and makes the lab more accessible to beginners.
+variation and makes the lab more accessible to beginners. It also makes it
+easier to build training curriculums on this foundation, which can be used
+in formal classes.
 
 **Why a virtual desktop instead of Ubuntu's official Desktop Edition?**
 Ubuntu's desktop edition is geared toward specific hardware. There's no
