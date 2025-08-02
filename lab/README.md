@@ -17,7 +17,7 @@ It sets up:
 
 ## 🛠️ Use Cases
 
-- Hands-on workshops and demos
+- Training classes, hands-on workshops, and demos
 - Self-paced learning and experimentation
 - Rapid sandbox environment for CloudNativePG development
 
@@ -25,7 +25,7 @@ It sets up:
 
 - Scripted install on a fresh Ubuntu VM
 - RDP-accessible desktop
-- Opinionated defaults for ease of use and robustness
+- Opinionated defaults, biased to provide ease of use and robustness/stability
 - No vendor lock-in — works on local VMs, cloud VMs, or bare metal
 
 ## 💻 Hardware Requirements
