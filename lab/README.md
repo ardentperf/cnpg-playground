@@ -106,11 +106,11 @@ Auto-completion is configured for most commands and alaises.
 experimentation, it seemed that running with 2 CPUs and 8 GBs of memory
 could result in a system that was running well over 50% utilized even
 before starting a monitoring stack or workload. At present it seems like
-these specs should be able to support a full CloudNativePG distributed
-topology for learning including two full kubernetes clusters with twelve
-nodes total, data replication between them, monitoring stacks on both, and
-a demo workload - all running on just your single personal machine or a
-single cloud instance.
+4 CPUs and 16 GBs of memory should be able to support a full CloudNativePG
+distributed topology for learning including two full kubernetes clusters
+with twelve nodes total, data replication between them, monitoring stacks
+on both, and a demo workload - all running on just your single personal
+machine or a single cloud instance.
 
 **What's the reasoning behind the vCPU/core rule of thumb?** Those of us
 who choose cloud environments will be using smaller instances - not whole
