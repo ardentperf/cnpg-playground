@@ -1,0 +1,186 @@
+---
+- name: Ubuntu 25.04 Desktop Setup - Core Installation
+  hosts: all
+  become: yes
+  vars:
+    # Proxy configuration - set these variables if proxy is needed
+    use_proxy: false
+    proxy_ip: "{{ proxy_ip | default(ansible_default_ipv4.gateway | default('127.0.0.1')) }}"
+    proxy_port: "{{ proxy_port | default(9000) }}"
+    # User configuration
+    target_user: "{{ ansible_user | default('azureuser') }}"
+    target_user_home: "/home/{{ target_user }}"
+    # Password configuration
+    set_user_password: "{{ set_user_password | default(false) }}"
+    user_password: "{{ user_password | default('') }}"
+    # Project configuration
+    script_dir: "{{ playbook_dir }}/.."
+    homepage_url: "https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md#cloudnativepg-lab"
+
+  tasks:
+    - name: Set user password if requested
+      user:
+        name: "{{ target_user }}"
+        password: "{{ user_password | password_hash('sha512') }}"
+      when: set_user_password and user_password != ""
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: yes
+
+    - name: Install all required packages (10-15 minutes)
+      apt:
+        name:
+          - cinnamon-desktop-environment
+          - xrdp
+          - docker.io
+          - nix-bin
+        state: present
+      register: package_install
+
+    - name: Create flag file after successful Cinnamon installation
+      file:
+        path: /etc/cinnamon-desktop-installed-by-cnpg-lab
+        state: touch
+        mode: '0644'
+      when: package_install.changed
+
+    - name: Create Docker proxy configuration directory
+      file:
+        path: /etc/systemd/system/docker.service.d
+        state: directory
+        mode: '0755'
+      when: use_proxy
+
+    - name: Configure Docker proxy settings
+      template:
+        src: docker-proxy.conf.j2
+        dest: /etc/systemd/system/docker.service.d/http-proxy.conf
+        mode: '0644'
+      when: use_proxy
+      notify: restart docker
+
+    - name: Add user to docker group
+      user:
+        name: "{{ target_user }}"
+        groups: docker
+        append: yes
+
+    - name: Add experimental features to Nix configuration
+      lineinfile:
+        path: /etc/nix/nix.conf
+        line: "experimental-features = nix-command flakes"
+        state: present
+
+    - name: Add user to nix-users group
+      user:
+        name: "{{ target_user }}"
+        groups: nix-users
+        append: yes
+
+    - name: Configure file watch limits for kind
+      copy:
+        dest: /etc/sysctl.d/99-inotify.conf
+        content: |
+          fs.inotify.max_user_watches=524288
+          fs.inotify.max_user_instances=512
+        mode: '0644'
+
+    - name: Apply sysctl changes
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: "fs.inotify.max_user_watches", value: "524288" }
+        - { name: "fs.inotify.max_user_instances", value: "512" }
+
+    - name: Create user application directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+      loop:
+        - "{{ target_user_home }}/.local/share/applications"
+        - "{{ target_user_home }}/.config/autostart"
+
+    - name: Create Firefox desktop shortcuts
+      file:
+        src: /var/lib/snapd/desktop/applications/firefox_firefox.desktop
+        dest: "{{ item }}"
+        state: link
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      loop:
+        - "{{ target_user_home }}/.local/share/applications/firefox.desktop"
+        - "{{ target_user_home }}/.config/autostart/firefox.desktop"
+      ignore_errors: yes
+
+    - name: Remove existing Firefox profiles
+      file:
+        path: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox"
+        state: absent
+      become_user: "{{ target_user }}"
+
+    - name: Create new Firefox profile
+      shell: snap run firefox --headless --createprofile "default"
+      become_user: "{{ target_user }}"
+      args:
+        creates: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/profiles.ini"
+
+    - name: Find Firefox profile directory
+      shell: awk -F= '/^Path=/{print $2; exit}' "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/profiles.ini"
+      become_user: "{{ target_user }}"
+      register: firefox_profile_path
+      failed_when: false
+      changed_when: false
+
+    - name: Configure Firefox user preferences
+      template:
+        src: firefox-user.js.j2
+        dest: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/{{ firefox_profile_path.stdout }}/user.js"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+      become_user: "{{ target_user }}"
+      when: firefox_profile_path.stdout is defined and firefox_profile_path.stdout != ""
+
+    - name: Create configure-desktop script
+      template:
+        src: configure-desktop.sh.j2
+        dest: "{{ target_user_home }}/configure-desktop.sh"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+
+    - name: Create autostart desktop entry
+      template:
+        src: configure-desktop.desktop.j2
+        dest: "{{ target_user_home }}/.config/autostart/configure-desktop.desktop"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+
+    - name: Configure bashrc for KUBECONFIG and nix development environment
+      blockinfile:
+        path: "{{ target_user_home }}/.bashrc"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - cnpg-lab configuration"
+        block: "{{ lookup('template', 'bashrc.j2') }}"
+
+  handlers:
+    - name: restart docker
+      systemd:
+        name: docker
+        state: restarted
+        daemon_reload: yes

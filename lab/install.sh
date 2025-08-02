@@ -24,8 +24,10 @@ if ! grep -q "Ubuntu 25.04" /etc/os-release; then
     exit 1
 fi
 
-# Check if this is a server installation (not desktop)
-if dpkg -l | awk '$1 == "ii" && $2 ~ /^xorg/ {found=1} END {exit !found}'; then
+# Check if this is a server installation (not desktop) - unless Cinnamon was already installed by this script
+if [ -f "/etc/cinnamon-desktop-installed-by-cnpg-lab" ]; then
+    echo "✓ Cinnamon desktop was already installed by this script. Proceeding with installation."
+elif dpkg -l | awk '$1 == "ii" && $2 ~ /^xorg/ {found=1} END {exit !found}'; then
     echo "ERROR: This script is designed for Ubuntu 25.04 Server installations only."
     echo "Detected X11/Xorg installation. Please use Ubuntu 25.04 Server instead."
     exit 1
@@ -40,16 +42,39 @@ echo .
 echo "WARNING: Remote desktop access may expose this system to unauthorized access attempts from the internet."
 echo .
 echo "Checking if user '$USER' has a password set..."
+PASSWORD_NEEDED=false
 if sudo grep "^$USER:" /etc/shadow | cut -d: -f2 | grep -q "^[!*]"; then
     echo "✗ User '$USER' does not have a password set (locked account)"
-    echo "Setting password for user '$USER'..."
-    sudo passwd $USER
+    PASSWORD_NEEDED=true
 elif sudo grep "^$USER:" /etc/shadow | cut -d: -f2 | grep -q "^$"; then
     echo "✗ User '$USER' does not have a password set (empty password field)"
-    echo "Setting password for user '$USER'..."
-    sudo passwd $USER
+    PASSWORD_NEEDED=true
 else
     echo "✓ User '$USER' has a password set"
+fi
+
+# Prompt for password if needed
+USER_PASSWORD=""
+if [ "$PASSWORD_NEEDED" = true ]; then
+    echo "Setting password for user '$USER'..."
+    echo -n "Enter new password (input will be hidden): "
+    read -s USER_PASSWORD
+    echo
+    echo -n "Confirm new password (input will be hidden): "
+    read -s USER_PASSWORD_CONFIRM
+    echo
+
+    if [ "$USER_PASSWORD" != "$USER_PASSWORD_CONFIRM" ]; then
+        echo "✗ Passwords do not match. Please run the script again."
+        exit 1
+    fi
+
+    if [ -z "$USER_PASSWORD" ]; then
+        echo "✗ Password cannot be empty. Please run the script again."
+        exit 1
+    fi
+
+    echo "✓ Password will be set via Ansible"
 fi
 echo .
 
@@ -74,130 +99,53 @@ echo .
 # Enable strict error handling for the installation phase
 set -euo pipefail
 
-sudo apt-get update
-sudo apt-get upgrade -y
+# Check if Ansible is installed and install if needed
+echo "Checking for Ansible installation..."
+if ! command -v ansible-playbook &> /dev/null; then
+    echo "Ansible is not installed. Installing Ansible..."
+    sudo apt-get update
+    sudo apt-get install -y ansible-core
+    echo "✓ Ansible installed successfully"
+else
+    echo "✓ Ansible is already installed"
+fi
+echo .
 
-sudo apt install tasksel -y
-sudo tasksel install cinnamon-desktop
+# Call Ansible playbook to perform the installation
+echo "Running Ansible playbook for installation..."
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
-sudo apt install xrdp docker.io nix-bin -y
-
-# Docker setup: proxy and add user to docker group.
+# Prepare Ansible variables
+ANSIBLE_VARS=""
 if [[ "$use_proxy" == "y" || "$use_proxy" == "yes" ]]; then
-    sudo mkdir -vp /etc/systemd/system/docker.service.d
-    sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf <<EOF
-[Service]
-Environment="HTTP_PROXY=http://$proxy_ip:$proxy_port"
-Environment="HTTPS_PROXY=http://$proxy_ip:$proxy_port"
-Environment="NO_PROXY=localhost,127.0.0.0/8,::1"
-EOF
+    ANSIBLE_VARS="use_proxy=true proxy_ip=$proxy_ip proxy_port=$proxy_port"
 fi
-sudo usermod -aG docker $USER
 
-# Nix setup: add user to nix-users group and set experimental features.
-echo experimental-features = nix-command flakes | sudo tee -a /etc/nix/nix.conf
-sudo usermod -aG nix-users $USER
-
-# Increase file watch limits - needed for running kind with a large number of nodes.
-sudo tee /etc/sysctl.d/99-inotify.conf <<EOF
-fs.inotify.max_user_watches=524288
-fs.inotify.max_user_instances=512
-EOF
-
-mkdir -vp $HOME/.local/share/applications
-mkdir -vp $HOME/.config/autostart
-ln -svf /var/lib/snapd/desktop/applications/firefox_firefox.desktop $HOME/.local/share/applications/firefox.desktop
-ln -svf /var/lib/snapd/desktop/applications/firefox_firefox.desktop $HOME/.config/autostart/
-# Remove existing Firefox profile(s) for this user, then create a new default profile (snap install)
-FIREFOX_PROFILE_DIR="$HOME/snap/firefox/common/.mozilla/firefox"
-if [ -d "$FIREFOX_PROFILE_DIR" ]; then
-    echo "Removing existing Firefox profiles (snap)..."
-    rm -rf "$FIREFOX_PROFILE_DIR"
-fi
-echo "Creating new default Firefox profile (snap)..."
-snap run firefox --headless --createprofile "default"
-# Find the new profile directory
-PROFILE_INI="$FIREFOX_PROFILE_DIR/profiles.ini"
-if [ -f "$PROFILE_INI" ]; then
-    PROFILE_PATH=$(awk -F= '/^Path=/{print $2; exit}' "$PROFILE_INI")
-    PROFILE_DIR="$FIREFOX_PROFILE_DIR/$PROFILE_PATH"
-    if [ -d "$PROFILE_DIR" ]; then
-        # Write a new user.js to set homepage and startup behavior
-        USER_JS="$PROFILE_DIR/user.js"
-        HOMEPAGE_URL="https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md#cloudnativepg-lab"
-        cat > "$USER_JS" <<EOF
-user_pref("browser.startup.page", 1); // 1 = home page, 0 = blank page
-user_pref("browser.startup.homepage", "$HOMEPAGE_URL"); // Set the homepage URL
-user_pref("browser.aboutwelcome.enabled", false); // Disable the new-style about:welcome
-user_pref("browser.startup.homepage_override.mstone", "ignore"); // Skip the "What's New" page
-user_pref("startup.homepage_welcome_url", "$HOMEPAGE_URL"); // Set the welcome URL
-user_pref("datareporting.policy.firstRunURL", ""); // Blank out first-run URL
-EOF
-        echo "Firefox profile (snap) configured with custom homepage via user.js."
+# Add password variables if password needs to be set
+if [ "$PASSWORD_NEEDED" = true ]; then
+    if [ -n "$ANSIBLE_VARS" ]; then
+        ANSIBLE_VARS="$ANSIBLE_VARS set_user_password=true user_password='$USER_PASSWORD'"
     else
-        echo "Could not find Firefox profile directory (snap). Skipping homepage configuration."
+        ANSIBLE_VARS="set_user_password=true user_password='$USER_PASSWORD'"
     fi
-else
-    echo "Could not find profiles.ini (snap). Skipping Firefox homepage configuration."
 fi
 
-# Create a script to configure desktop settings in user's home directory
-cat > ~/configure-desktop.sh << 'EOF'
-#!/bin/bash
-LOGFILE="$HOME/configure-desktop-$(date +%Y%m%d_%H%M%S).log"
-exec > >(tee -a "$LOGFILE") 2>&1
-echo "[$(date)] Starting configure-desktop.sh"
-sleep 30
-# Launch gnome-terminal once to trigger profile creation
-gnome-terminal --window -- bash -c "exit"
-sleep 1  # give it a moment to write to dconf
-default_uuid=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d \')
-# Set GNOME Terminal profile colors and options
-# Set background color (dark), foreground color (light), bold-is-bright, and use-theme-colors
-gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" background-color 'rgb(23,20,33)'
-gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" foreground-color 'rgb(208,207,204)'
-gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" bold-is-bright true
-gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" use-theme-colors false
-EOF
-# Make the script executable
-chmod +x ~/configure-desktop.sh
-# Add the script to autostart for GNOME session
-mkdir -vp ~/.config/autostart
-cat > ~/.config/autostart/configure-desktop.desktop << EOF
-[Desktop Entry]
-Type=Application
-Name=Configure Desktop
-Exec=/home/$USER/configure-desktop.sh
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-EOF
+# Run the Ansible playbook
+ansible-playbook install-core.yml -i localhost, -c local --extra-vars "$ANSIBLE_VARS" | while read -r line; do echo "$(date +%H:%M:%S) $line"; done
+ANSIBLE_EXIT_CODE=${PIPESTATUS[0]}
 
-# Set KUBECONFIG and auto-enters the nix development environment on login.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cat <<EOF >> ~/.bashrc
-echo "Setting KUBECONFIG to $SCRIPT_DIR/k8s/kube-config.yaml"
-export KUBECONFIG=$SCRIPT_DIR/k8s/kube-config.yaml
-cd $SCRIPT_DIR
-# Only auto-enter nix develop if not already inside, and only for login interactive shells
-if [ -z "\$IN_NIX_SHELL" ] && [ -z "\$CNPG_DEV_ENTERED" ] && [[ "\$-" == *i* ]]; then
-    export CNPG_DEV_ENTERED=1
-    echo "Entering nix development environment..."
-    if nix develop .; then
-        echo "nix develop . completed successfully."
-    else
-        echo "nix develop . failed. Please check the output above for errors."
-    fi
+if [ $ANSIBLE_EXIT_CODE -eq 0 ]; then
+    echo "✓ Ansible playbook completed successfully"
 else
-    echo "Already inside a nix environment or already entered. Skipping 'nix develop .'."
+    echo "✗ Ansible playbook failed"
+    exit 1
 fi
-EOF
 
 # Inform the user that a reboot is required and prompts for confirmation
 echo .
 echo "Installation complete at: $(date)"
 echo .
-echo "You need to restart the system for all changes to take effect. (In particular, the current user needs to be added to the docker group.)"
+echo "You might need to restart the system for all changes to take effect. (In particular, the current user needs to be added to the docker group.)"
 echo .
 echo "You can now connect via RDP as user '$USER' using the password."
 echo .

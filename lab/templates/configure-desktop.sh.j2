@@ -1,0 +1,16 @@
+#!/bin/bash
+LOGFILE="$HOME/configure-desktop-$(date +%Y%m%d_%H%M%S).log"
+exec > >(tee -a "$LOGFILE") 2>&1
+echo "[$(date)] Starting configure-desktop.sh"
+sleep 30
+# Launch gnome-terminal once to trigger profile creation
+gnome-terminal --window -- bash -c "exit"
+sleep 1  # give it a moment to write to dconf
+default_uuid=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d \')
+# Set GNOME Terminal profile colors and options
+# Set background color (dark), foreground color (light), bold-is-bright, and use-theme-colors
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" background-color 'rgb(23,20,33)'
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" foreground-color 'rgb(208,207,204)'
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" bold-is-bright true
+gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" use-theme-colors false
+echo "[$(date)] Desktop configuration completed successfully!"
