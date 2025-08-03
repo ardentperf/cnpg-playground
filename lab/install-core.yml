@@ -4,15 +4,15 @@
   become: yes
   vars:
     # Proxy configuration - set these variables if proxy is needed
-    use_proxy: "{{ use_proxy | default(false) }}"
-    proxy_ip: "{{ proxy_ip }}"
-    proxy_port: "{{ proxy_port }}"
+    use_proxy: false
+    proxy_ip: ""
+    proxy_port: ""
     # User configuration
     target_user: "{{ ansible_user }}"
     target_user_home: "/home/{{ target_user }}"
     # Password configuration
-    set_user_password: "{{ set_user_password | default(false) }}"
-    user_password: "{{ user_password }}"
+    set_user_password: false
+    user_password: ""
     # Project configuration
     script_dir: "{{ playbook_dir }}/.."
     homepage_url: "https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md#cloudnativepg-lab"
