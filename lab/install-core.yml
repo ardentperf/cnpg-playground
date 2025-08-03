@@ -8,7 +8,7 @@
     proxy_ip: "{{ proxy_ip | default(ansible_default_ipv4.gateway | default('127.0.0.1')) }}"
     proxy_port: "{{ proxy_port | default(9000) }}"
     # User configuration
-    target_user: "{{ ansible_user | default('azureuser') }}"
+    target_user: "{{ ansible_user }}"
     target_user_home: "/home/{{ target_user }}"
     # Password configuration
     set_user_password: "{{ set_user_password | default(false) }}"
