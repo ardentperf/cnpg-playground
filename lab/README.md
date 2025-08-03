@@ -217,10 +217,10 @@ https://ubuntu.com/download/server
 
 **⚠️ Do not use the Desktop installer! Make sure to use the Server installer! ⚠️**
 
-VirtualBox and UTM have been used successfully; WSL2 might work in theory
+VirtualBox and UTM have been used successfully; WSL2 should work in theory
 so please let us know if you test it successfully. Be careful of licensing
 on the VirtualBox extension pack - Reddit users have reported Oracle going
-after money after they noticed downloads. VirtualBox version 4 might not
+after money after they noticed downloads. VirtualBox version 4 should not
 need the extension pack for these labs anyway.
 
 
