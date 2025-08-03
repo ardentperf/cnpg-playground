@@ -278,7 +278,3 @@ The Azure scripts will:
 ### Manual Setup (Alternative)
 
 If you prefer manual setup or need to customize beyond what the scripts offer, you can reference the scripts in `lab/cloud-setup/` and copy/paste the commands to run them manually.
-
-## GCP Ubuntu Server Creation
-
-GCP setup scripts are planned for future releases.
