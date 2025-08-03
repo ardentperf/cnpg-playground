@@ -176,18 +176,16 @@ automation scripts will handle it if needed.
 * Azure: Standard_D4ps_v6 ... 0.140/hr ... 23.520/week
 * GCP: t2a-standard-4 ... 0.154/hr ... 25.872/week
 
-I recommend against bursting instance classes in cloud environments, because
-even with 4 CPUs, CNPG sandbox baseline cpu utilization might run hot (maybe
-over 50% depending on what you're doing).
-
 You're of course welcome to try different families than those above. These
 suggestions are targeting the lowest price point that will provide a
 consistent and reliable experience.
 
 Besides trying fewer CPUs or less memory, there are also some options like
-bursting instance families (but keep an eye on your cpu usage and your
-instance's baseline utilization for burst) or lower cost instance families
-like GCP's E2 family.
+bursting instance families or lower cost instance families like GCP's E2
+family. Note that even with 4 CPUs, CNPG sandbox baseline cpu utilization
+might run hot (maybe over 50% depending on what you're doing) - so if you
+try a bursting instance class then keep an eye on your cpu usage and your
+instance's baseline utilization for burst.
 
 ## Cost estimate for buying hardware to directly run Ubuntu (US Dollars)
 
