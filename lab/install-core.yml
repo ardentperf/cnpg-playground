@@ -1,15 +1,15 @@
 ---
-- name: Ubuntu 25.04 Desktop Setup - Core Installation
+- name: Ubuntu 25.04 Desktop Setup - Core Installation - CNPG Lab
   hosts: all
-  become: yes
+  gather_facts: yes
   vars:
     # Proxy configuration - set these variables if proxy is needed
     use_proxy: false
     proxy_ip: ""
     proxy_port: ""
     # User configuration
-    target_user: "{{ ansible_user }}"
-    target_user_home: "/home/{{ target_user }}"
+    target_user: "{{ ansible_user | default(ansible_env.USER) }}"
+    target_user_home: "{{ ansible_user_dir | default('/home/' + ansible_env.USER) }}"
     # Password configuration
     set_user_password: false
     user_password: ""
@@ -18,48 +18,45 @@
     homepage_url: "https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md#cloudnativepg-lab"
 
   tasks:
-    - name: Display variable values
+    - name: Display proxy configuration
       debug:
-        msg: |
-          Proxy Configuration:
-          - use_proxy: {{ use_proxy }}
-          - proxy_ip: {{ proxy_ip }}
-          - proxy_port: {{ proxy_port }}
+        msg: "use_proxy={{ use_proxy }}, proxy_ip={{ proxy_ip }}, proxy_port={{ proxy_port }}"
 
-          User Configuration:
-          - target_user: {{ target_user }}
-          - target_user_home: {{ target_user_home }}
+    - name: Display user configuration
+      debug:
+        msg: "target_user={{ target_user }}, target_user_home={{ target_user_home }}"
 
-          Password Configuration:
-          - set_user_password: {{ set_user_password }}
-          - user_password: {% if user_password != '' %}SET{% else %}NOT SET{% endif %}
+    - name: Display password configuration
+      debug:
+        msg: "set_user_password={{ set_user_password }}, user_password={% if user_password != '' %}SET{% else %}NOT SET{% endif %}"
 
-          Project Configuration:
-          - script_dir: {{ script_dir }}
-          - homepage_url: {{ homepage_url }}
+    - name: Display project configuration
+      debug:
+        msg: "script_dir={{ script_dir }}, homepage_url={{ homepage_url }}"
 
     - name: Create Ansible remote temp directory with proper permissions
       file:
         path: "{{ target_user_home }}/.ansible/tmp"
         state: directory
         mode: '0755'
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
 
     - name: Set user password if requested
       user:
         name: "{{ target_user }}"
         password: "{{ user_password | password_hash('sha512') }}"
       when: set_user_password and user_password != ""
+      become: yes
 
     - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
+      become: yes
 
     - name: Upgrade all packages (less than 5 minutes on fast internet)
       apt:
         upgrade: yes
+      become: yes
 
     - name: Install all required packages (less than 15 minutes on fast internet)
       apt:
@@ -70,6 +67,7 @@
           - nix-bin
         state: present
       register: package_install
+      become: yes
 
     - name: Create flag file after successful Cinnamon installation
       file:
@@ -77,6 +75,7 @@
         state: touch
         mode: '0644'
       when: package_install.changed
+      become: yes
 
     - name: Create Docker proxy configuration directory
       file:
@@ -84,6 +83,7 @@
         state: directory
         mode: '0755'
       when: use_proxy
+      become: yes
 
     - name: Configure Docker proxy settings
       template:
@@ -92,24 +92,28 @@
         mode: '0644'
       when: use_proxy
       notify: restart docker
+      become: yes
 
     - name: Add user to docker group
       user:
         name: "{{ target_user }}"
         groups: docker
         append: yes
+      become: yes
 
     - name: Add experimental features to Nix configuration
       lineinfile:
         path: /etc/nix/nix.conf
         line: "experimental-features = nix-command flakes"
         state: present
+      become: yes
 
     - name: Add user to nix-users group
       user:
         name: "{{ target_user }}"
         groups: nix-users
         append: yes
+      become: yes
 
     - name: Configure file watch limits for kind
       copy:
@@ -118,6 +122,7 @@
           fs.inotify.max_user_watches=524288
           fs.inotify.max_user_instances=512
         mode: '0644'
+      become: yes
 
     - name: Apply sysctl changes
       sysctl:
@@ -128,13 +133,12 @@
       loop:
         - { name: "fs.inotify.max_user_watches", value: "524288" }
         - { name: "fs.inotify.max_user_instances", value: "512" }
+      become: yes
 
     - name: Create user application directories
       file:
         path: "{{ item }}"
         state: directory
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
         mode: '0755'
       loop:
         - "{{ target_user_home }}/.local/share/applications"
@@ -145,8 +149,6 @@
         src: /var/lib/snapd/desktop/applications/firefox_firefox.desktop
         dest: "{{ item }}"
         state: link
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
       loop:
         - "{{ target_user_home }}/.local/share/applications/firefox.desktop"
         - "{{ target_user_home }}/.config/autostart/firefox.desktop"
@@ -156,17 +158,14 @@
       file:
         path: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox"
         state: absent
-      become_user: "{{ target_user }}"
 
     - name: Create new Firefox profile
       shell: snap run firefox --headless --createprofile "default"
-      become_user: "{{ target_user }}"
       args:
         creates: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/profiles.ini"
 
     - name: Find Firefox profile directory
       shell: awk -F= '/^Path=/{print $2; exit}' "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/profiles.ini"
-      become_user: "{{ target_user }}"
       register: firefox_profile_path
       failed_when: false
       changed_when: false
@@ -175,33 +174,24 @@
       template:
         src: firefox-user.js.j2
         dest: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/{{ firefox_profile_path.stdout }}/user.js"
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
         mode: '0644'
-      become_user: "{{ target_user }}"
       when: firefox_profile_path.stdout is defined and firefox_profile_path.stdout != ""
 
     - name: Create configure-desktop script
       template:
         src: configure-desktop.sh.j2
         dest: "{{ target_user_home }}/configure-desktop.sh"
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
         mode: '0755'
 
     - name: Create autostart desktop entry
       template:
         src: configure-desktop.desktop.j2
         dest: "{{ target_user_home }}/.config/autostart/configure-desktop.desktop"
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
         mode: '0644'
 
     - name: Configure bashrc for KUBECONFIG and nix development environment
       blockinfile:
         path: "{{ target_user_home }}/.bashrc"
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
         mode: '0644'
         marker: "# {mark} ANSIBLE MANAGED BLOCK - cnpg-lab configuration"
         block: "{{ lookup('template', 'bashrc.j2') }}"
@@ -212,3 +202,4 @@
         name: docker
         state: restarted
         daemon_reload: yes
+      become: yes
