@@ -14,7 +14,7 @@ It sets up:
 - Browser preconfigured with bookmarks for CNPG docs and Grafana monitoring
   dashboards based on Prometheus and Loki (WIP/TODO)
 - Useful CLI tools like `kubectl`, `btop`, `lazydocker`, `k9s`, `bat`, etc
-  (including aliases, shell completion, and the sandbox `nix` environment).
+  (including aliases, shell completion, and the playground `nix` environment).
 - Optional sample clusters, exercises, and visual tools (WIP/TODO)
 - Ansible playbooks that can be used to preconfigure an entire classroom
 
@@ -185,7 +185,7 @@ consistent and reliable experience.
 
 Besides trying fewer CPUs or less memory, there are also some options like
 bursting instance families or lower cost instance families like GCP's E2
-family. Note that even with 4 CPUs, CNPG sandbox baseline cpu utilization
+family. Note that even with 4 CPUs, CNPG playground baseline cpu utilization
 might run hot (maybe over 50% depending on what you're doing) - so if you
 try a bursting instance class then keep an eye on your cpu usage and your
 instance's baseline utilization for burst.
