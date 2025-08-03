@@ -25,8 +25,8 @@ REGION=${REGION:-us-west-2}
 read -p "Enter instance name [cnpg1]: " INSTANCE_NAME
 INSTANCE_NAME=${INSTANCE_NAME:-cnpg1}
 
-read -p "Enter key pair name [t430s]: " KEY_NAME
-KEY_NAME=${KEY_NAME:-t430s}
+read -p "Enter key pair name [default-keypair]: " KEY_NAME
+KEY_NAME=${KEY_NAME:-default-keypair}
 
 read -p "Enter instance type [m6g.xlarge]: " INSTANCE_TYPE
 INSTANCE_TYPE=${INSTANCE_TYPE:-m6g.xlarge}
