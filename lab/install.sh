@@ -8,6 +8,15 @@
 # Make sure to use strong passwords and consider firewall rules.
 #
 
+# Function to handle sudo command failures
+sudo_cmd() {
+    if ! sudo "$@"; then
+        echo "✗ Sudo command failed: sudo $*"
+        echo "Please check your sudo privileges and try again."
+        exit 1
+    fi
+}
+
 # Create a log file with timestamp
 LOG_FILE="install_$(date +%Y%m%d_%H%M%S).log"
 exec > >(tee -a "$LOG_FILE") 2>&1
@@ -43,10 +52,10 @@ echo "WARNING: Remote desktop access may expose this system to unauthorized acce
 echo .
 echo "Checking if user '$USER' has a password set..."
 PASSWORD_NEEDED=false
-if sudo grep "^$USER:" /etc/shadow | cut -d: -f2 | grep -q "^[!*]"; then
+if sudo_cmd grep "^$USER:" /etc/shadow | cut -d: -f2 | grep -q "^[!*]"; then
     echo "✗ User '$USER' does not have a password set (locked account)"
     PASSWORD_NEEDED=true
-elif sudo grep "^$USER:" /etc/shadow | cut -d: -f2 | grep -q "^$"; then
+elif sudo_cmd grep "^$USER:" /etc/shadow | cut -d: -f2 | grep -q "^$"; then
     echo "✗ User '$USER' does not have a password set (empty password field)"
     PASSWORD_NEEDED=true
 else
@@ -106,8 +115,8 @@ trap 'echo "✗ Installation failed. Check the log file for details: $LOG_FILE"'
 echo "Checking for Ansible installation..."
 if ! command -v ansible-playbook &> /dev/null; then
     echo "Ansible is not installed. Installing Ansible..."
-    sudo apt-get update
-    sudo apt-get install -y ansible-core
+    sudo_cmd apt-get update
+    sudo_cmd apt-get install -y ansible-core
     echo "✓ Ansible installed successfully"
 else
     echo "✓ Ansible is already installed"
@@ -151,4 +160,4 @@ echo "You can now connect via RDP as user '$USER' using the password."
 echo .
 echo "Press Enter to reboot the system, or Ctrl+C to cancel..."
 read -r
-sudo reboot
+sudo_cmd reboot
