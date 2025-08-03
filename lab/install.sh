@@ -145,7 +145,7 @@ trap - EXIT
 echo .
 echo "Installation complete at: $(date)"
 echo .
-echo "You might need to restart the system for all changes to take effect. (In particular, the current user needs to be added to the docker group.)"
+echo "You might need to restart the system for all changes to take effect. (In particular, the current user needs to pick up group changes.)"
 echo .
 echo "You can now connect via RDP as user '$USER' using the password."
 echo .
