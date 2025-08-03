@@ -18,6 +18,14 @@
     homepage_url: "https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/README.md#cloudnativepg-lab"
 
   tasks:
+    - name: Create Ansible remote temp directory with proper permissions
+      file:
+        path: "{{ ansible_env.HOME | default('/home/' + ansible_user) }}/.ansible/tmp"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
     - name: Set user password if requested
       user:
         name: "{{ target_user }}"
