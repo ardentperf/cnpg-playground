@@ -4,11 +4,10 @@ This Ansible playbook (`install-core.yml`) contains the core installation logic 
 
 ## Prerequisites
 
-- Ubuntu 25.04 Server (not desktop)
-- Ansible installed on the control machine
-- SSH access to the target server
-- Sudo privileges on the target server
-- **Note**: Ensure Ansible is preinstalled on all target VMs before running the playbook
+- Ubuntu 25.04 Server (not desktop) clean/fresh install on targets
+- SSH access to the targets
+- Sudo privileges on the targets
+- Ansible installed on the targets
 
 ## Usage
 
@@ -79,9 +78,7 @@ ansible students -i inventory.ini -m ping
 
 **Note**: After running the playbook, remember to reboot all VMs for the desktop environment and system changes to take full effect.
 
-## Architecture
-
-User interaction and prechecks and system validation are handled by the `install.sh` shell script. That script calls the ansible playbook (`install-core.yml`), which contains the core installation logic.
+## What the Ansible Playbook Does
 
 1. **Package Installation**:
    - Updates and upgrades packages
