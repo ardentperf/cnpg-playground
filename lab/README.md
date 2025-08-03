@@ -49,7 +49,7 @@ the recommended specs, and you will need to leave enough resources for
 everything else running on your laptop. When configuring the VM, if you are
 asked to set a CPU count, assign `4 CPUs` to the VM. As with cloud environments,
 you are assigning virtual CPUs—not physical cores—to your virtual machine.
-VirtualBox, UTM (on mac) and WSL (on windows) should all work for installing
+VirtualBox, UTM (on mac) and WSL2 (on windows) should all work for installing
 and running Ubuntu in a VM.*
 
 ## 🎯 Getting Started
@@ -206,7 +206,7 @@ encounter.
 
 # Detailed steps to get a freshly installed Ubuntu 25.04 server
 
-## Operating System Installation using official Ubuntu Desktop Installer
+## Operating System Installation using official Ubuntu Server Installer
 
 If you're running in a Virtual Machine on your Windows or Mac laptop or if
 you want to install directly on hardware like a laptop or older server then
@@ -214,6 +214,8 @@ download the Ubuntu 25.04 Server Installer ISO and use that to directly
 install ubuntu.
 
 https://ubuntu.com/download/server
+
+**⚠️ Do not use the Desktop installer! Make sure to use the Server installer! ⚠️**
 
 VirtualBox and UTM have been used successfully; WSL2 might work in theory
 so please let us know if you test it successfully. Be careful of licensing
