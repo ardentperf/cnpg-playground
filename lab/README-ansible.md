@@ -79,9 +79,9 @@ ansible students -i inventory.ini -m ping
 
 **Note**: After running the playbook, remember to reboot all VMs for the desktop environment and system changes to take full effect.
 
-## What the Playbook Does
+## Architecture
 
-**Note**: This playbook (`install-core.yml`) contains only the core installation logic. Prechecks and system validation are handled by the `install.sh` shell script wrapper.
+User interaction and prechecks and system validation are handled by the `install.sh` shell script. That script calls the ansible playbook (`install-core.yml`), which contains the core installation logic.
 
 1. **Package Installation**:
    - Updates and upgrades packages
@@ -142,21 +142,3 @@ ansible students -i inventory.ini -m ping
 - A reboot is recommended for all changes to take full effect
 - The user will be added to docker and nix-users groups
 - RDP access will be available after installation (port 3389) - ensure proper firewall rules are in place
-
-## Architecture
-
-This Ansible playbook is designed to work as part of a hybrid approach:
-
-- **`install.sh`**: Shell script wrapper that handles:
-  - System prechecks and validation (with smart detection for re-runs)
-  - User interaction (password setup, proxy configuration)
-  - Calls the Ansible playbook with appropriate variables
-  - Post-installation flow (reboot prompt)
-
-- **`install-core.yml`**: Ansible playbook that handles:
-  - Core installation logic
-  - Package management
-  - Configuration file creation
-  - Template-based setup
-
-This approach combines the user-friendly interaction of shell scripts with the structured, idempotent nature of Ansible playbooks.
