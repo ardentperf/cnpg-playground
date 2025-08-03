@@ -215,241 +215,68 @@ install ubuntu.
 
 https://ubuntu.com/download/server
 
-Cloud instances with the server preinstalled are readily available.
+VirtualBox and UTM have been used successfully; WSL2 might work in theory
+so please let us know if you test it successfully. Be careful of licensing
+on the VirtualBox extension pack - Reddit users have reported Oracle going
+after money after they noticed downloads. VirtualBox version 4 might not
+need the extension pack for these labs anyway.
 
-Exact copy-and-paste instructions to get a functional Ubuntu server on
-AWS and Azure follow. These have been tested fairly thoroughly; if I find
-time to test GCP then I'll add instructions for it too.
 
-## AWS Ubuntu Server Creation
+## Cloud Provider Setup Scripts
 
-Create an EC2 instance with Ubuntu 25.04 on ARM64 architecture. The
-instance will be tagged with the name "cnpg1" for easy identification.
+Cloud instances with Ubuntu server preinstalled are readily available.
 
-Choose a region that's close to you. From Seattle, RDP remote desktops are
-noticably more responsive when using west coast regions (versus east coast
-regions).
+Automated scripts are available for mac and linux to create and manage Ubuntu 25.04 server instances on AWS and Azure. These scripts prompt for configuration variables with sensible defaults and handle all the setup and cleanup automatically.
 
-*nb. to use a different region, lookup AMIs at https://cloud-images.ubuntu.com/locator/ec2/ or use this command:*
+### Prerequisites
 
+Before running the scripts, ensure you have:
+- AWS CLI configured (`aws configure`) for AWS scripts
+- Azure CLI installed and logged in (`az login`) for Azure scripts
+- Appropriate permissions to create and manage cloud resources
+
+### AWS Setup and Teardown
+
+**Setup:**
 ```bash
-aws ssm get-parameters --names /aws/service/canonical/ubuntu/server/25.04/stable/current/arm64/hvm/ebs-gp3/ami-id --region us-east-1
+bash lab/cloud-setup/aws-setup.sh
 ```
 
-Set environment variables
-
+**Teardown:**
 ```bash
-REGION=us-east-1
-INSTANCE_NAME=cnpg1
-KEY_NAME=t430s
+bash lab/cloud-setup/aws-teardown.sh
 ```
 
+The AWS scripts will:
+- Create an EC2 instance with Ubuntu 25.04 on ARM64 architecture
+- Configure security groups for SSH (port 22) and RDP (port 3389) access
+- Set up proper tagging for easy identification
+- Prompt for region, instance name, key pair, instance type, and disk size
+- Default to `m6g.xlarge` instance type (4 vCPUs, 16GB RAM)
+
+### Azure Setup and Teardown
+
+**Setup:**
 ```bash
-AMI_ID=$(aws ssm get-parameters --names /aws/service/canonical/ubuntu/server/25.04/stable/current/arm64/hvm/ebs-gp3/ami-id --region $REGION --query 'Parameters[0].Value' --output text) && echo "AMI ID: $AMI_ID"
+bash lab/cloud-setup/azure-setup.sh
 ```
 
+**Teardown:**
 ```bash
-aws ec2 run-instances --instance-type m6g.xlarge --image-id $AMI_ID \
-    --region $REGION  --monitoring Enabled=true --key-name $KEY_NAME \
-    --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":100,"VolumeType":"gp3","DeleteOnTermination":true}}]' \
-    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]"
+bash lab/cloud-setup/azure-teardown.sh
 ```
 
-Check if SSH port (22) is already open, if not open it
+The Azure scripts will:
+- Create a VM with Ubuntu 25.04 on ARM64 architecture
+- Set up a new resource group
+- Configure network security for SSH and RDP access
+- Prompt for location, resource group name, VM name, VM size, and disk size
+- Default to `Standard_D4ps_v6` VM size (4 vCPUs, 16GB RAM)
 
-```bash
-aws ec2 describe-security-groups --region $REGION --group-names default --query 'SecurityGroups[0].IpPermissions[?FromPort==`22`]'
-```
+### Manual Setup (Alternative)
 
-Open only if needed
-
-```bash
-aws ec2 authorize-security-group-ingress \
-    --region $REGION \
-    --group-name default \
-    --protocol tcp \
-    --port 22 \
-    --cidr 0.0.0.0/0
-```
-
-Check if RDP port (3389) is already open, if not open it
-
-```bash
-aws ec2 describe-security-groups --region $REGION --group-names default --query 'SecurityGroups[0].IpPermissions[?FromPort==`3389`]'
-```
-
-Open only if needed
-
-```bash
-aws ec2 authorize-security-group-ingress \
-    --region $REGION \
-    --group-name default \
-    --protocol tcp \
-    --port 3389 \
-    --cidr 0.0.0.0/0
-```
-
-Get the public IP address of the instance
-
-```bash
-aws ec2 describe-instances \
-    --region $REGION \
-    --filters "Name=tag:Name,Values=$INSTANCE_NAME" "Name=instance-state-name,Values=running" \
-    --query 'Reservations[0].Instances[0].PublicIpAddress' \
-    --output text
-```
-
-Connect with SSH
-
-```bash
-ssh ubuntu@172.184.113.71
-```
-
-## AWS Ubuntu Server Cleanup
-
-Set environment vars
-
-```bash
-REGION=us-east-1
-INSTANCE_NAME=cnpg1
-```
-
-Get the instance ID by name tag
-
-```bash
-INSTANCE_ID=$(aws ec2 describe-instances \
-    --region $REGION \
-    --filters "Name=tag:Name,Values=$INSTANCE_NAME" "Name=instance-state-name,Values=running,stopped" \
-    --query 'Reservations[0].Instances[0].InstanceId' \
-    --output text) && echo "Instance ID: $INSTANCE_ID"
-```
-
-Terminate the instance (this will also delete the EBS volume due to DeleteOnTermination=true)
-
-```bash
-aws ec2 terminate-instances --region $REGION --instance-ids $INSTANCE_ID
-```
-
-
-## Azure Ubuntu Server Creation
-
-Create a VM with Ubuntu 25.04 on ARM64 architecture in a new resource
-group. The VM will be accessible via SSH and RDP.
-
-Choose a region that's close to you. From Seattle, RDP remote desktops are
-noticably more responsive when using west coast regions (versus east coast
-regions).
-
-```bash
-LOCATION=eastus
-RESOURCE_GROUP=cnpg1
-VM_NAME=cnpg1vm
-```
-
-```bash
-az group create --name $RESOURCE_GROUP --location $LOCATION
-```
-
-Create the VM
-
-```bash
-az vm create \
-  --resource-group $RESOURCE_GROUP \
-  --name $VM_NAME \
-  --location $LOCATION \
-  --size Standard_D4ps_v6 \
-  --image Canonical:ubuntu-25_04:server-arm64:latest \
-  --admin-username azureuser \
-  --generate-ssh-keys \
-  --os-disk-size-gb 100 \
-  --storage-sku Standard_LRS \
-  --public-ip-address ${VM_NAME}PublicIP
-```
-
-Open RDP port (3389) for remote desktop access
-
-```bash
-az vm open-port \
-  --resource-group $RESOURCE_GROUP \
-  --name $VM_NAME \
-  --port 3389
-```
-
-```bash
-az vm list-ip-addresses --resource-group $RESOURCE_GROUP --output table
-```
-
-```bash
-      VirtualMachine    PublicIPAddresses    PrivateIPAddresses
-      ----------------  -------------------  --------------------
-      cnpg-playground   172.184.113.71       10.0.0.4
-```
-
-Connect with SSH
-
-```bash
-ssh azureuser@172.184.113.71
-```
-
-## Azure Ubuntu Server Cleanup
-
-**Simple approach (recommended):**
-
-```bash
-RESOURCE_GROUP=cnpg1
-```
-
-This will delete the VM and all associated resources in one command
-
-```bash
-az group delete --name $RESOURCE_GROUP --yes
-```
-
-**Step-by-step approach (if you need more control):**
-
-*Get the actual resource names from the VM before deleting it*
-
-```bash
-RESOURCE_GROUP=cnpg1
-VM_NAME=cnpg1vm
-```
-
-Get the OS disk name and NIC name from the VM
-
-```bash
-OS_DISK_NAME=$(az vm show --name $VM_NAME --resource-group $RESOURCE_GROUP --query "storageProfile.osDisk.name" -o tsv)
-```
-
-```bash
-NIC_NAME=$(az vm show --name $VM_NAME --resource-group $RESOURCE_GROUP --query "networkProfile.networkInterfaces[0].id" -o tsv | sed 's/.*\///')
-```
-
-Delete the VM (this will also delete the OS disk automatically)
-
-```bash
-az vm delete --name $VM_NAME --resource-group $RESOURCE_GROUP --yes
-```
-
-Delete the NIC and OS disk (if they still exists)
-
-```bash
-[ ! -z "$NIC_NAME" ] && az network nic delete --name "$NIC_NAME" --resource-group $RESOURCE_GROUP || true
-[ ! -z "$OS_DISK_NAME" ] && az disk delete --name "$OS_DISK_NAME" --resource-group $RESOURCE_GROUP --yes || true
-```
-
-Delete the public IP (this name was specified in the create command)
-
-```bash
-az network public-ip delete --name ${VM_NAME}PublicIP --resource-group $RESOURCE_GROUP
-```
-
-Delete the resource group (this will clean up any remaining resources)
-
-```bash
-az group delete --name $RESOURCE_GROUP --yes
-```
+If you prefer manual setup or need to customize beyond what the scripts offer, you can reference the scripts in `lab/cloud-setup/` and copy/paste the commands to run them manually.
 
 ## GCP Ubuntu Server Creation
 
-The AWS and Azure setups have been tested fairly thoroughly; if I find time to
-test GCP then I'll add instructions for it too.
+GCP setup scripts are planned for future releases.
