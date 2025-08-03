@@ -215,7 +215,8 @@ install ubuntu.
 
 https://ubuntu.com/download/server
 
-**⚠️ Do not use the Desktop installer! Make sure to use the Server installer! ⚠️**
+**⚠️ Do not use the Desktop installer! Make sure to use the Server installer,
+and don't install a desktop environment! ⚠️**
 
 VirtualBox and UTM have been used successfully; WSL2 should work in theory
 so please let us know if you test it successfully. Be careful of licensing
