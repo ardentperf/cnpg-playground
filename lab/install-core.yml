@@ -154,28 +154,23 @@
         - "{{ target_user_home }}/.config/autostart/firefox.desktop"
       ignore_errors: yes
 
-    - name: Remove existing Firefox profiles
+    - name: Create Firefox policies directory
       file:
-        path: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox"
-        state: absent
+        path: /etc/firefox/policies
+        state: directory
+        mode: '0755'
+      become: yes
 
-    - name: Create new Firefox profile
-      shell: snap run firefox --headless --createprofile "default"
-      args:
-        creates: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/profiles.ini"
-
-    - name: Find Firefox profile directory
-      shell: awk -F= '/^Path=/{print $2; exit}' "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/profiles.ini"
-      register: firefox_profile_path
-      failed_when: false
-      changed_when: false
-
-    - name: Configure Firefox user preferences
+    - name: Configure Firefox policies (system-wide)
       template:
-        src: firefox-user.js.j2
-        dest: "{{ target_user_home }}/snap/firefox/common/.mozilla/firefox/{{ firefox_profile_path.stdout }}/user.js"
+        src: firefox-policies.json.j2
+        dest: /etc/firefox/policies/policies.json
         mode: '0644'
-      when: firefox_profile_path.stdout is defined and firefox_profile_path.stdout != ""
+      become: yes
+
+
+
+
 
     - name: Create configure-desktop script
       template:

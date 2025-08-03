@@ -1,0 +1,78 @@
+{
+  "policies": {
+    "Bookmarks": [
+      {
+        "Title": "Lab Homepage",
+        "URL": "{{ homepage_url }}"
+      },
+      {
+        "Title": "CNPG Docs",
+        "URL": "https://cloudnative-pg.io/documentation/current/"
+      },
+      {
+        "Title": "CNPG GitHub",
+        "URL": "https://github.com/cloudnative-pg/cloudnative-pg"
+      },
+      {
+        "Title": "MinIO EU",
+        "URL": "http://172.17.0.2:9001"
+      },
+      {
+        "Title": "MinIO US",
+        "URL": "http://172.17.0.3:9001"
+      },
+      {
+        "Title": "Grafana EU",
+        "URL": "http://localhost:8080"
+      },
+      {
+        "Title": "Grafana US",
+        "URL": "http://localhost:8081"
+      }
+    ],
+    "Homepage": {
+      "URL": "{{ homepage_url }}",
+      "StartPage": "homepage"
+    },
+    "BookmarksToolbar": {
+      "ShowBookmarksToolbar": true,
+      "HideImportBookmarks": true
+    },
+    "DisableTelemetry": true,
+    "DisableFirefoxAccounts": true,
+    "DisablePocket": true,
+    "DisableFirefoxStudies": true,
+    "DisableAppUpdate": true,
+    "DisableSystemAddonUpdate": true,
+    "DisableMasterPasswordCreation": true,
+    "DisableUserAgentUpdates": true,
+    "DisableDefaultBrowserAgent": true,
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "SkipOnboarding": true
+    },
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "NewTabPage": false,
+    "SearchSuggestEnabled": false,
+    "ShowHomeButton": true,
+    "PromptForDownloadLocation": true,
+    "DownloadDirectory": "{{ target_user_home }}/Downloads",
+    "DontCheckDefaultBrowser": true,
+    "Sidebar": {
+      "HideSidebar": true
+    },
+    "ExtensionSettings": {
+      "*": {
+        "installation_mode": "blocked"
+      }
+    },
+    "Preferences": {
+      "browser.toolbars.bookmarks.visibility": "always",
+      "browser.bookmarks.showImportBookmarks": false
+    }
+  }
+}

@@ -102,6 +102,8 @@ ansible students -i inventory.ini -m ping
 6. **Firefox Setup**:
    - Creates desktop shortcuts
    - Configures homepage and startup behavior
+   - Sets up bookmarks toolbar visibility
+   - Automatically installs default bookmarks using Firefox Enterprise Policies
 7. **Desktop Configuration**:
    - Creates autostart script for GNOME Terminal colors
 8. **Development Environment**:
@@ -130,9 +132,10 @@ ansible students -i inventory.ini -m ping
 - `/etc/sysctl.d/99-inotify.conf` (file watch limits)
 - `~/.local/share/applications/firefox.desktop` (Firefox shortcut)
 - `~/.config/autostart/firefox.desktop` (Firefox autostart)
+- `~/.mozilla/firefox/[profile]/policies.json` (Firefox Enterprise Policies)
 - `~/configure-desktop.sh` (Desktop configuration script)
 - `~/.config/autostart/configure-desktop.desktop` (Autostart entry)
-- Firefox profile with custom homepage
+- Firefox profile with custom homepage and bookmarks toolbar
 
 ## Notes
 
