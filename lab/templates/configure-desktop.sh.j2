@@ -2,7 +2,7 @@
 LOGFILE="$HOME/configure-desktop-$(date +%Y%m%d_%H%M%S).log"
 exec > >(tee -a "$LOGFILE") 2>&1
 echo "[$(date)] Starting configure-desktop.sh"
-sleep 30
+sleep 10
 # Launch gnome-terminal once to trigger profile creation
 gnome-terminal --window -- bash -c "exit"
 sleep 1  # give it a moment to write to dconf
