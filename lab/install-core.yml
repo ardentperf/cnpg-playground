@@ -29,11 +29,11 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Upgrade all packages
+    - name: Upgrade all packages (less than 5 minutes on fast internet)
       apt:
         upgrade: yes
 
-    - name: Install all required packages (10-15 minutes)
+    - name: Install all required packages (less than 15 minutes on fast internet)
       apt:
         name:
           - cinnamon-desktop-environment
