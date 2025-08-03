@@ -47,10 +47,42 @@
       when: set_user_password and user_password != ""
       become: yes
 
+    - name: Download Mozilla Team PPA GPG key
+      get_url:
+        url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x738BEB9321D1AAEC13EA9391AEBDF4819BE21867
+        dest: /tmp/mozillateam-key.asc
+
+    - name: Import Mozilla Team PPA GPG key using gpg
+      shell: |
+        gpg --dearmor -o /usr/share/keyrings/mozillateam-archive-keyring.gpg /tmp/mozillateam-key.asc
+      args:
+        creates: /usr/share/keyrings/mozillateam-archive-keyring.gpg
+      become: yes
+
+    - name: Add Mozilla Team PPA
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/mozillateam-archive-keyring.gpg] http://ppa.launchpad.net/mozillateam/ppa/ubuntu {{ ansible_distribution_release }} main"
+        state: present
+        filename: mozillateam
+      become: yes
+
     - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
+      become: yes
+
+    - name: Remove Firefox Snap package
+      community.general.snap:
+        name: firefox
+        state: absent
+      become: yes
+
+    - name: Remove Firefox APT package
+      apt:
+        name: firefox
+        state: absent
+        autoremove: yes
       become: yes
 
     - name: Upgrade all packages (less than 5 minutes on fast internet)
@@ -65,6 +97,7 @@
           - xrdp
           - docker.io
           - nix-bin
+          - firefox-esr
         state: present
       register: package_install
       become: yes
@@ -146,12 +179,12 @@
 
     - name: Create Firefox desktop shortcuts
       file:
-        src: /var/lib/snapd/desktop/applications/firefox_firefox.desktop
+        src: /usr/share/applications/firefox-esr.desktop
         dest: "{{ item }}"
         state: link
       loop:
-        - "{{ target_user_home }}/.local/share/applications/firefox.desktop"
-        - "{{ target_user_home }}/.config/autostart/firefox.desktop"
+        - "{{ target_user_home }}/.local/share/applications/firefox-esr.desktop"
+        - "{{ target_user_home }}/.config/autostart/firefox-esr.desktop"
       ignore_errors: yes
 
     - name: Create Firefox policies directory
