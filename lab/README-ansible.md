@@ -48,16 +48,16 @@ For training environments with multiple identical VMs, create a simple inventory
 ```ini
 # inventory.ini - 10 identical student VMs
 [students]
-student01 ansible_host=192.168.1.101 ansible_user=azureuser
-student02 ansible_host=192.168.1.102 ansible_user=azureuser
-student03 ansible_host=192.168.1.103 ansible_user=azureuser
-student04 ansible_host=192.168.1.104 ansible_user=azureuser
-student05 ansible_host=192.168.1.105 ansible_user=azureuser
-student06 ansible_host=192.168.1.106 ansible_user=azureuser
-student07 ansible_host=192.168.1.107 ansible_user=azureuser
-student08 ansible_host=192.168.1.108 ansible_user=azureuser
-student09 ansible_host=192.168.1.109 ansible_user=azureuser
-student10 ansible_host=192.168.1.110 ansible_user=azureuser
+student01 ansible_host=192.168.1.101 ansible_user=ubuntu
+student02 ansible_host=192.168.1.102 ansible_user=ubuntu
+student03 ansible_host=192.168.1.103 ansible_user=ubuntu
+student04 ansible_host=192.168.1.104 ansible_user=ubuntu
+student05 ansible_host=192.168.1.105 ansible_user=ubuntu
+student06 ansible_host=192.168.1.106 ansible_user=ubuntu
+student07 ansible_host=192.168.1.107 ansible_user=ubuntu
+student08 ansible_host=192.168.1.108 ansible_user=ubuntu
+student09 ansible_host=192.168.1.109 ansible_user=ubuntu
+student10 ansible_host=192.168.1.110 ansible_user=ubuntu
 
 [students:vars]
 use_proxy=true
