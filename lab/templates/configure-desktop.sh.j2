@@ -14,3 +14,7 @@ gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/prof
 gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" bold-is-bright true
 gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$default_uuid/" use-theme-colors false
 echo "[$(date)] Desktop configuration completed successfully!"
+
+# Launch a generic interactive terminal in the background and detach completely
+nohup gnome-terminal --window -- bash >/dev/null 2>&1 &
+disown
