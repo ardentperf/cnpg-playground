@@ -168,10 +168,6 @@
         mode: '0644'
       become: yes
 
-
-
-
-
     - name: Create configure-desktop script
       template:
         src: configure-desktop.sh.j2
