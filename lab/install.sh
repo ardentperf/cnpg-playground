@@ -99,6 +99,9 @@ echo .
 # Enable strict error handling for the installation phase
 set -euo pipefail
 
+# Set up error trap to print message on exit
+trap 'echo "✗ Installation failed. Check the log file for details: $LOG_FILE"' EXIT
+
 # Check if Ansible is installed and install if needed
 echo "Checking for Ansible installation..."
 if ! command -v ansible-playbook &> /dev/null; then
@@ -132,14 +135,11 @@ fi
 
 # Run the Ansible playbook
 ansible-playbook install-core.yml -i localhost, -c local --extra-vars "$ANSIBLE_VARS" | while read -r line; do echo "$(date +%H:%M:%S) $line"; done
-ANSIBLE_EXIT_CODE=${PIPESTATUS[0]}
 
-if [ $ANSIBLE_EXIT_CODE -eq 0 ]; then
-    echo "✓ Ansible playbook completed successfully"
-else
-    echo "✗ Ansible playbook failed"
-    exit 1
-fi
+echo "✓ Ansible playbook completed successfully"
+
+# Remove the error trap since installation succeeded
+trap - EXIT
 
 # Inform the user that a reboot is required and prompts for confirmation
 echo .
