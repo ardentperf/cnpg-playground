@@ -54,6 +54,18 @@ if [[ ! $CONFIRM =~ ^[Yy]$ ]]; then
 fi
 
 echo
+echo "Checking if resource group '$RESOURCE_GROUP' already exists..."
+EXISTING_RG=$(az group show --name $RESOURCE_GROUP --query 'name' --output tsv 2>/dev/null || echo "")
+
+if [[ "$EXISTING_RG" != "" ]]; then
+    echo "❌ Error: Resource group '$RESOURCE_GROUP' already exists"
+    echo "Please choose a different resource group name."
+    exit 1
+fi
+
+echo "✅ No existing resource group found with name '$RESOURCE_GROUP'"
+
+echo
 echo "Creating resource group..."
 az group create --name $RESOURCE_GROUP --location $LOCATION --output tsv
 
@@ -111,7 +123,19 @@ echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
 echo
 echo "Next steps:"
 echo "  ssh ubuntu@$PUBLIC_IP git clone https://github.com/ardentperf/cnpg-playground"
-echo "  ssh ubuntu@$PUBLIC_IP bash -c \"echo && cd cnpg-playground && git checkout tmp-work"
+echo "  ssh ubuntu@$PUBLIC_IP bash -c \"echo && cd cnpg-playground && git checkout tmp-work\""
 echo "  ssh -t ubuntu@$PUBLIC_IP bash cnpg-playground/lab/install.sh"
+echo
+read -p "Would you like to automatically run these next steps? (y/N): " RUN_NEXT_STEPS
+if [[ $RUN_NEXT_STEPS =~ ^[Yy]$ ]]; then
+    echo "Cloning repository..."
+    ssh ubuntu@$PUBLIC_IP git clone https://github.com/ardentperf/cnpg-playground
+
+    echo "Checking out tmp-work branch..."
+    ssh ubuntu@$PUBLIC_IP bash -c "echo && cd cnpg-playground && git checkout tmp-work"
+
+    echo "Running lab installation..."
+    ssh -t ubuntu@$PUBLIC_IP bash cnpg-playground/lab/install.sh
+fi
 echo
 echo "To clean up later, run: bash scripts/azure-teardown.sh"
