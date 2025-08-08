@@ -136,15 +136,6 @@ PUBLIC_IP=$(aws ec2 describe-instances \
 echo
 echo "=== Setup Complete! ==="
 echo
-echo "Instance Details:"
-echo "  Name: $INSTANCE_NAME"
-echo "  Public IP: $PUBLIC_IP"
-echo "  Region: $REGION"
-echo
-echo "Connection Commands:"
-echo "  SSH: ssh ubuntu@$PUBLIC_IP"
-echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
-echo
 echo "Next steps:"
 echo "  ssh ubuntu@$PUBLIC_IP git clone https://github.com/ardentperf/cnpg-playground"
 echo "  ssh ubuntu@$PUBLIC_IP bash -c \"echo && cd cnpg-playground && git checkout tmp-work\""
@@ -161,5 +152,14 @@ if [[ $RUN_NEXT_STEPS =~ ^[Yy]$ ]]; then
     echo "Running lab installation..."
     ssh -t ubuntu@$PUBLIC_IP bash cnpg-playground/lab/install.sh
 fi
+echo
+echo "Instance Details:"
+echo "  Name: $INSTANCE_NAME"
+echo "  Public IP: $PUBLIC_IP"
+echo "  Region: $REGION"
+echo
+echo "Connection Commands:"
+echo "  SSH: ssh ubuntu@$PUBLIC_IP"
+echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
 echo
 echo "To clean up later, run: bash scripts/aws-teardown.sh"

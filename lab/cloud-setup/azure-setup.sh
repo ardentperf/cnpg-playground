@@ -111,16 +111,6 @@ PUBLIC_IP=$(az vm show --name $VM_NAME --resource-group $RESOURCE_GROUP --show-d
 echo
 echo "=== Setup Complete! ==="
 echo
-echo "VM Details:"
-echo "  Name: $VM_NAME"
-echo "  Resource Group: $RESOURCE_GROUP"
-echo "  Public IP: $PUBLIC_IP"
-echo "  Location: $LOCATION"
-echo
-echo "Connection Commands:"
-echo "  SSH: ssh ubuntu@$PUBLIC_IP"
-echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
-echo
 echo "Next steps:"
 echo "  ssh ubuntu@$PUBLIC_IP git clone https://github.com/ardentperf/cnpg-playground"
 echo "  ssh ubuntu@$PUBLIC_IP bash -c \"echo && cd cnpg-playground && git checkout tmp-work\""
@@ -137,5 +127,15 @@ if [[ $RUN_NEXT_STEPS =~ ^[Yy]$ ]]; then
     echo "Running lab installation..."
     ssh -t ubuntu@$PUBLIC_IP bash cnpg-playground/lab/install.sh
 fi
+echo
+echo "VM Details:"
+echo "  Name: $VM_NAME"
+echo "  Resource Group: $RESOURCE_GROUP"
+echo "  Public IP: $PUBLIC_IP"
+echo "  Location: $LOCATION"
+echo
+echo "Connection Commands:"
+echo "  SSH: ssh ubuntu@$PUBLIC_IP"
+echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
 echo
 echo "To clean up later, run: bash scripts/azure-teardown.sh"
