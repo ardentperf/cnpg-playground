@@ -109,4 +109,9 @@ echo "Connection Commands:"
 echo "  SSH: ssh ubuntu@$PUBLIC_IP"
 echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
 echo
+echo "Next steps:"
+echo "  ssh ubuntu@$PUBLIC_IP git clone https://github.com/ardentperf/cnpg-playground"
+echo "  ssh ubuntu@$PUBLIC_IP bash -c \"echo && cd cnpg-playground && git checkout tmp-work"
+echo "  ssh -t ubuntu@$PUBLIC_IP bash cnpg-playground/lab/install.sh"
+echo
 echo "To clean up later, run: bash scripts/azure-teardown.sh"
