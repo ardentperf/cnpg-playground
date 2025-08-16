@@ -175,7 +175,7 @@ automation scripts will handle it if needed.
 
 *For "US East 1" region as of 6-July-2025*
 
-* AWS: m6g.xlarge ... 0.154/hr ... 25.872/week
+* AWS: m7g.xlarge ... 0.1632/hr ... 27.4176/week
 * Azure: Standard_D4ps_v6 ... 0.140/hr ... 23.520/week
 * GCP: t2a-standard-4 ... 0.154/hr ... 25.872/week
 
@@ -258,7 +258,7 @@ The AWS scripts will:
 - Configure security groups for SSH (port 22) and RDP (port 3389) access
 - Set up proper tagging for easy identification
 - Prompt for region, instance name, key pair, instance type, and disk size
-- Default to `m6g.xlarge` instance type (4 vCPUs, 16GB RAM)
+- Default to `m7g.xlarge` instance type (4 vCPUs, 16GB RAM)
 
 ### Azure Setup and Teardown
 

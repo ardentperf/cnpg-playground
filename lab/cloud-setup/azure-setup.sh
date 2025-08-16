@@ -108,6 +108,8 @@ echo
 echo "Getting public IP address..."
 PUBLIC_IP=$(az vm show --name $VM_NAME --resource-group $RESOURCE_GROUP --show-details --query "publicIps" --output tsv)
 
+sleep 10    # give a few extra seconds for the operating system to boot up and become available
+
 echo
 echo "=== Setup Complete! ==="
 echo
@@ -138,4 +140,4 @@ echo "Connection Commands:"
 echo "  SSH: ssh ubuntu@$PUBLIC_IP"
 echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
 echo
-echo "To clean up later, run: bash scripts/azure-teardown.sh"
+echo "To clean up later, run: bash lab/cloud-setup/azure-teardown.sh"

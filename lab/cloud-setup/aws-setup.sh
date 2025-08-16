@@ -28,8 +28,8 @@ INSTANCE_NAME=${INSTANCE_NAME:-cnpg1}
 read -p "Enter key pair name [default-keypair]: " KEY_NAME
 KEY_NAME=${KEY_NAME:-default-keypair}
 
-read -p "Enter instance type [m6g.xlarge]: " INSTANCE_TYPE
-INSTANCE_TYPE=${INSTANCE_TYPE:-m6g.xlarge}
+read -p "Enter instance type [m7g.xlarge]: " INSTANCE_TYPE
+INSTANCE_TYPE=${INSTANCE_TYPE:-m7g.xlarge}
 
 read -p "Use ARM64 architecture? (Y/n): " USE_ARM64
 USE_ARM64=${USE_ARM64:-y}
@@ -133,6 +133,8 @@ PUBLIC_IP=$(aws ec2 describe-instances \
     --query 'Reservations[0].Instances[0].PublicIpAddress' \
     --output text)
 
+sleep 10    # give a few extra seconds for the operating system to boot up and become available
+
 echo
 echo "=== Setup Complete! ==="
 echo
@@ -162,4 +164,4 @@ echo "Connection Commands:"
 echo "  SSH: ssh ubuntu@$PUBLIC_IP"
 echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
 echo
-echo "To clean up later, run: bash scripts/aws-teardown.sh"
+echo "To clean up later, run: bash lab/cloud-setup/aws-teardown.sh"
