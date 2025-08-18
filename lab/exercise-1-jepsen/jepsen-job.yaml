@@ -26,7 +26,7 @@
 #   k9s
 #   kubectl get pods -l  'cnpg.io/instanceRole=primary'
 #   kubectl cnpg status pg-eu
-#   kubectl cnpg psql pg-eu -- -c "select pg_stat_statements_reset(); select pg_sleep(1); select now(), left(query,40) query,calls,mean_exec_time,total_exec_time from pg_stat_statements where query not like 'select pg_sleep%' order by 5 desc limit 20;"
+#   kubectl cnpg psql pg-eu -- -c "select pg_stat_statements_reset(); select pg_sleep(1); select clock_timestamp(), left(query,40) query,calls,mean_exec_time,total_exec_time from pg_stat_statements where query not like 'select pg_sleep%' order by 5 desc limit 20;"
 #   kubectl cnpg psql pg-eu -- -c "select now(), query, wait_event_type, wait_event, count(*) from pg_stat_activity where state='active' and application_name like 'jepsen%' group by query,wait_event_type,wait_event;"
 #
 apiVersion: batch/v1
