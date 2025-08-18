@@ -50,7 +50,8 @@ spec:
           args:
             - |
               cd /jepsenpg
-              curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o mc  && chmod -v +x mc && mv -v mc /usr/local/bin/mc
+              MC_ARCH=$(case $(uname -m) in x86_64) echo linux-amd64 ;; aarch64|arm64) echo linux-arm64 ;; esac)
+              curl -fsSL https://dl.min.io/client/mc/release/$MC_ARCH/mc -o mc && chmod +x mc && mv mc /usr/local/bin/mc
               mc alias set cnpgobj http://minio-eu:9000 $ACCESS_KEY_ID $ACCESS_SECRET_KEY
               mc mb --ignore-existing cnpgobj/jepsenpg
 
