@@ -1,0 +1,60 @@
+################ Kubernetes job that runs Jepsen against the CNPG cluster ################
+#
+# To run jepsen against the "pg-eu" cluster:    (can repeat this to re-run the test)
+#   kubectl replace --force -f lab/exercise-1-jepsen/jepsen-job.yaml
+#
+# To check results:
+#   kubectl get pod -l job-name=jepsenpg-job -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
+#   kubectl logs -l job-name=jepsenpg-job
+#
+# Full jepsen results are automatically uploaded to a bucket in minio-eu object storage when the test completes.
+#
+# The configuration below (500 keys with uniform distribution, 250 writes per key and 50 concurrent writers)
+# is optimized for throughput to detect any cases where data is lost during cluster reconfigurations.
+#
+# The duration of the test run in seconds is determined by the --time-limit and --test-count arguments. Because
+# post-run history analysis can be resource intensive, it might be worth using test-count for longer duration
+# testing. There will be pauses between each test iteration. If you experiment with thresholds then please
+# share your learnings on CNPG Slack!
+#
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jepsenpg
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      nodeSelector: {node-role.kubernetes.io/app: ""}
+      restartPolicy: Never
+      containers:
+        - name: jepsenpg
+          image: ardentperf/jepsenpg:latest
+          envFrom:
+          - secretRef: {name: pg-eu-app}
+          - secretRef: {name: minio-eu}
+          command: ["sh","-exc"]
+          args:
+            - |
+              cd /jepsenpg
+              curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o mc  && chmod -v +x mc && mv -v mc /usr/local/bin/mc
+              mc alias set cnpgobj http://minio-eu:9000 $ACCESS_KEY_ID $ACCESS_SECRET_KEY
+              mc mb --ignore-existing cnpgobj/jepsenpg
+
+              lein run test-all -w append --isolation read-committed --nemesis none --no-ssh \
+                  --key-count 500 \
+                  --max-writes-per-key 250 \
+                  --max-txn-length 4 \
+                  --key-dist uniform \
+                  --concurrency 50 \
+                  --rate 500 \
+                  --time-limit 300 \
+                  --test-count 1 \
+                  --existing-postgres --node pg-eu-rw.default.svc.cluster.local --postgres-user app --postgres-password $password >jepsen.out || true
+
+              tar czvf store-$(date +%Y%m%d-%H%M).tgz store/
+              mc cp store-*.tgz cnpgobj/jepsenpg/
+
+              grep -A5 anomaly-types jepsen.out | tee -a /dev/termination-log || true
+              tail -4 jepsen.out | tee -a /dev/termination-log
