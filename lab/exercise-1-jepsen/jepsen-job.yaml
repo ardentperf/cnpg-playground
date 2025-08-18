@@ -9,8 +9,8 @@
 #   kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false
 #
 # To check results:
-#   kubectl get pod -l job-name=jepsenpg-job -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
-#   kubectl logs -l job-name=jepsenpg-job
+#   kubectl get pod -l job-name=jepsenpg -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
+#   kubectl logs -l job-name=jepsenpg
 #
 # Full jepsen results are automatically uploaded to a bucket in minio-eu object storage when the test completes.
 #
