@@ -1,28 +1,49 @@
-# Detailed steps to get a freshly installed Ubuntu 25.04 server
+# Creating a "CNPG Lab" Virtual Desktop
 
-## Operating System Installation using official Ubuntu Server Installer
+# Detailed steps to
 
-If you're running in a Virtual Machine on your Windows or Mac laptop or if
-you want to install directly on hardware like a laptop or older server then
-download the Ubuntu 25.04 Server Installer ISO and use that to directly
-install ubuntu.
+## Option 1: Run a VM on your laptop with VirtualBox
+
+VirtualBox is recommended for local installations because it's fairly similar
+across windows and mac and linux, so it's easier for us to help answer your
+questions and get you up and running.
+
+If you've never installed the MSVC redistributable, the you might also need
+to download and install this first (it's required by VirtualBox):
+
+https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
+
+Download and install VirtualBox:
+
+https://www.virtualbox.org/wiki/Downloads
+
+Download the Ubuntu 25.04 Server Installer ISO:
 
 https://ubuntu.com/download/server
 
-**⚠️ Do not use the Desktop installer! Make sure to use the Server installer,
-and don't install a desktop environment! ⚠️**
+**⚠️ Do not get a Desktop installer! Make sure to get the Server installer!
+Make sure you have the right version! (25.04) ⚠️**
 
-VirtualBox and UTM have been used successfully; WSL2 should work in theory
-so please let us know if you test it successfully. Be careful of licensing
+Be careful of licensing
 on the VirtualBox extension pack - Reddit users have reported Oracle going
 after money after they noticed downloads. VirtualBox version 4 should not
 need the extension pack for these labs anyway.
+
+### Creating a VM and installing Ubuntu
+
+Create the Virtual Machine with 4 CPUs, 16 GB memory, and 100 GB disk.
+
+When installing Ubuntu:
+1. Choose the option to install the SSH server
+2. On the disk partition screen, you'll need to edit the partition sizes so that Ubuntu uses the whole disk. For some reason it only uses about half the disk by default.
+
+After Ubuntu is installed, make sure you have internet access by logging in and testing something like `curl www.google.com`.
 
 ### Converting the Ubuntu 25.04 Server into a CNPG Lab VM
 
 Reference the [main CNPG Lab README](../README.md) for details.
 
-Run these commands to convert that Ubuntu 25.04 Server into a CNPG Lab VM:
+Run these commands to convert the Ubuntu 25.04 Server into a CNPG Lab VM:
 
 ```bash
 git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground  &&  git checkout tmp-work
@@ -33,7 +54,7 @@ bash lab/install.sh
 ```
 
 
-## Cloud Provider Setup Scripts
+## Option 2: Use a compute instance from a Cloud Provider
 
 Cloud instances with Ubuntu server preinstalled are readily available.
 
@@ -86,11 +107,13 @@ The Azure scripts will:
 - Prompt for location, resource group name, VM name, VM size, and disk size
 - Default to `Standard_D4ps_v6` VM size (4 vCPUs, 16GB RAM)
 
-### Manual Setup (Alternative)
 
-If you prefer manual setup or need to customize beyond what the scripts offer,
-you can reference the scripts in `lab/exercise-1-setup/` and copy/paste the
-commands to run them manually.
+## Other Options
+
+All you need is a freshly installed Ubuntu 25.04 server. There are lots of ways
+to do this. You can use virtualization software (like UTM or Proxmox) and you
+can use cloud compute providers (like oracle cloud or digital ocean or linode).
+
 
 
 # Starting up the CNPG Playground
