@@ -1,7 +1,5 @@
 # Creating a "CNPG Lab" Virtual Desktop
 
-# Detailed steps to
-
 ## Option 1: Run a VM on your laptop with VirtualBox
 
 VirtualBox is recommended for local installations because it's fairly similar
