@@ -1,13 +1,12 @@
 # CloudNativePG Lab
 
-The *CloudNativePG LAB* provides a **post-install bootstrap script** that transforms a clean Ubuntu server into a fully functional **virtual desktop lab environment** for working with [CloudNativePG](https://cloudnative-pg.io/). This is actually the CNPG
-playground, except with a tightly managed environment so that you don't need to figure out the two dozen reasons something doesn't
-work on "your laptop" when it works for everyone else.  (Especially for our friends w windows laptops.) The LAB is a single
-consistent environment, always the same, super stable, not breaking over time.
+Do you want to try the CNPG Playground - but you don't want to spend time tweaking `sysctl fs.inotify` on Linux, or wrestling with WSL on Windows, or getting Rancher & KinD cooperating on your Mac?
 
-- A graphical virtual desktop environment (accessible via RDP)
-- Kubernetes with a local cluster (with `kind`)
-- CloudNativePG and the CNPG Playground ready to use
+The *CloudNativePG LAB* hands you a ready-to-use, batteries-included, runs-anywhere Virtual Machine with the CNPG Playground and some Lab Exercises.
+
+This is done with a **post-install bootstrap script** that transforms a clean Ubuntu 25.04 server into a fully functional **virtual desktop lab environment** accessible directly (with VirtualBox, etc) and accessible remotely via Remote Desktop.
+
+In addition to the CNPG Playground, this also includes:
 - Browser preconfigured with bookmarks for CNPG docs and Grafana monitoring
   dashboards based on Prometheus and Loki (WIP/TODO)
 - Useful CLI tools like `kubectl`, `btop`, `lazydocker`, `k9s`, `bat`, etc
@@ -17,10 +16,13 @@ consistent environment, always the same, super stable, not breaking over time.
 
 ## 🔧 Hardware Requirements
 
+You specifically need **Ubuntu 25.04 Server** and make sure you *do not install a desktop*.
+
 Requirements for **your laptop**, to run locally with VirtualBox or another virtualization software:
 
 ```
 6 CPUs, 24GB memory, 150GB disk
+(this includes extra hardware capacity for your laptop, while the VM is running)
 ```
 
 Requirements of **the VM or cloud instance itself**:
