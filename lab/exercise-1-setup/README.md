@@ -18,11 +18,28 @@ on the VirtualBox extension pack - Reddit users have reported Oracle going
 after money after they noticed downloads. VirtualBox version 4 should not
 need the extension pack for these labs anyway.
 
+### Converting the Ubuntu 25.04 Server into a CNPG Lab VM
+
+Reference the [main CNPG Lab README](../README.md) for details.
+
+Run these commands to convert that Ubuntu 25.04 Server into a CNPG Lab VM:
+
+```bash
+git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground  &&  git checkout tmp-work
+```
+
+```bash
+bash lab/install.sh
+```
+
+
 ## Cloud Provider Setup Scripts
 
 Cloud instances with Ubuntu server preinstalled are readily available.
 
 Automated scripts are available for mac and linux to create and manage Ubuntu 25.04 server instances on AWS and Azure. These scripts prompt for configuration variables with sensible defaults and handle all the setup and cleanup automatically.
+
+These automated scripts automatically convert the cloud instance into a CNPG Lab VM, after starting the instance. If you're using windows then you can ssh to any cloud instance with Ubuntu 25.04 Server and run the CNPG lab script to convert it.
 
 ### Prerequisites
 
@@ -74,6 +91,7 @@ The Azure scripts will:
 If you prefer manual setup or need to customize beyond what the scripts offer,
 you can reference the scripts in `lab/exercise-1-setup/` and copy/paste the
 commands to run them manually.
+
 
 # Starting up the CNPG Playground
 
