@@ -10,7 +10,7 @@ In addition to the CNPG Playground, this also includes:
 - Browser preconfigured with bookmarks for CNPG docs and Grafana monitoring
   dashboards based on Prometheus and Loki (WIP/TODO)
 - Useful CLI tools like `kubectl`, `btop`, `lazydocker`, `k9s`, `bat`, etc
-  (including aliases, shell completion, and the playground `nix` environment).
+  (including aliases, shell completion, and the CNPG playground's `nix` devshell).
 - Optional sample clusters, exercises, and visual tools (WIP/TODO)
 - Ansible playbooks that can be used to preconfigure an entire classroom
 
