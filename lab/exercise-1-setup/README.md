@@ -75,6 +75,9 @@ If you prefer manual setup or need to customize beyond what the scripts offer,
 you can reference the scripts in `lab/exercise-1-setup/` and copy/paste the
 commands to run them manually.
 
+# Starting up the CNPG Playground
+
+Reference the [main CNPG Playground README](../../README.md) for details.
 
 Run this command to create infrastructure including S3-compatible storage and
 kubernetes clusters named `kind-k8s-eu` and `kind-k8s-us`:
@@ -104,4 +107,3 @@ Some aliases are preconfigured:
 * `n` for `kubens`
 
 Auto-completion is configured for most commands and alaises.
-
