@@ -1,3 +1,23 @@
+# Detailed steps to get a freshly installed Ubuntu 25.04 server
+
+## Operating System Installation using official Ubuntu Server Installer
+
+If you're running in a Virtual Machine on your Windows or Mac laptop or if
+you want to install directly on hardware like a laptop or older server then
+download the Ubuntu 25.04 Server Installer ISO and use that to directly
+install ubuntu.
+
+https://ubuntu.com/download/server
+
+**⚠️ Do not use the Desktop installer! Make sure to use the Server installer,
+and don't install a desktop environment! ⚠️**
+
+VirtualBox and UTM have been used successfully; WSL2 should work in theory
+so please let us know if you test it successfully. Be careful of licensing
+on the VirtualBox extension pack - Reddit users have reported Oracle going
+after money after they noticed downloads. VirtualBox version 4 should not
+need the extension pack for these labs anyway.
+
 ## Cloud Provider Setup Scripts
 
 Cloud instances with Ubuntu server preinstalled are readily available.
@@ -85,22 +105,3 @@ Some aliases are preconfigured:
 
 Auto-completion is configured for most commands and alaises.
 
-# Detailed steps to get a freshly installed Ubuntu 25.04 server
-
-## Operating System Installation using official Ubuntu Server Installer
-
-If you're running in a Virtual Machine on your Windows or Mac laptop or if
-you want to install directly on hardware like a laptop or older server then
-download the Ubuntu 25.04 Server Installer ISO and use that to directly
-install ubuntu.
-
-https://ubuntu.com/download/server
-
-**⚠️ Do not use the Desktop installer! Make sure to use the Server installer,
-and don't install a desktop environment! ⚠️**
-
-VirtualBox and UTM have been used successfully; WSL2 should work in theory
-so please let us know if you test it successfully. Be careful of licensing
-on the VirtualBox extension pack - Reddit users have reported Oracle going
-after money after they noticed downloads. VirtualBox version 4 should not
-need the extension pack for these labs anyway.
