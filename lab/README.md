@@ -1,12 +1,9 @@
 # CloudNativePG Lab
 
-**One-shot script to set up a full virtual desktop for CloudNativePG training and experimentation.**
-
-## 🚀 What is it?
-
-This project provides a **post-install bootstrap script** that transforms a clean Ubuntu system into a fully functional **virtual desktop lab environment** for working with [CloudNativePG](https://cloudnative-pg.io/).
-
-It sets up:
+The *CloudNativePG LAB* provides a **post-install bootstrap script** that transforms a clean Ubuntu server into a fully functional **virtual desktop lab environment** for working with [CloudNativePG](https://cloudnative-pg.io/). This is actually the CNPG
+playground, except with a tightly managed environment so that you don't need to figure out the two dozen reasons something doesn't
+work on "your laptop" when it works for everyone else.  (Especially for our friends w windows laptops.) The LAB is a single
+consistent environment, always the same, super stable, not breaking over time.
 
 - A graphical virtual desktop environment (accessible via RDP)
 - Kubernetes with a local cluster (with `kind`)
@@ -18,20 +15,15 @@ It sets up:
 - Optional sample clusters, exercises, and visual tools (WIP/TODO)
 - Ansible playbooks that can be used to preconfigure an entire classroom
 
-## 🛠️ Use Cases
+## 🔧 Hardware Requirements
 
-- Training classes, hands-on workshops, and demos
-- Self-paced learning and experimentation
-- Rapid sandbox environment for CloudNativePG development
+Requirements for **your laptop**, to run locally with VirtualBox or another virtualization software:
 
-## ✅ Features
+```
+6 CPUs, 24GB memory, 150GB disk
+```
 
-- Scripted install on a fresh Ubuntu VM
-- RDP-accessible desktop
-- Opinionated defaults, biased to provide ease of use and robustness/stability
-- No vendor lock-in — works on local VMs, cloud VMs, or bare metal
-
-## 💻 Hardware Requirements
+Requirements of **the VM or cloud instance itself**:
 
 ```
 4 CPUs, 16GB memory, 100GB disk
@@ -40,24 +32,10 @@ Outbound internet connection (proxies and custom CAs are supported)
 Inbound ports 22 and 3389 (port forwarding is fine)
 ```
 
-Rule of thumb for "what is a CPU":
-* In cloud environments, count vCPUs.
-* On your own hardware, count physical cores (not smt threads or operating
-  system CPUs).
-
-*If you are running this in a Virtual Machine on your Windows or Mac laptop,
-your laptop itself should have at least `6 physical cores`, `24GB memory`,
-and `150GB available storage`. The Virtual Machine you create needs to match
-the recommended specs, and you will need to leave enough resources for
-everything else running on your laptop. When configuring the VM, if you are
-asked to set a CPU count, assign `4 CPUs` to the VM. As with cloud environments,
-you are assigning virtual CPUs—not physical cores—to your virtual machine.
-VirtualBox, UTM (on mac) and WSL2 (on windows) should all work for installing
-and running Ubuntu in a VM.*
 
 ## 🎯 Getting Started
 
-Run this on a fresh Ubuntu 25.04 Server install:
+Run this on a fresh Ubuntu 25.04 Server:
 
 ```bash
 git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground  &&  git checkout tmp-work
@@ -73,34 +51,45 @@ When the script completes, it will reboot the server. After the reboot, you
 can connect with either SSH or RDP and all terminals will automatically use a
 `nix` devshell to enter an environment with tools for learning and exploring.
 
-Run this command to create infrastructure including S3-compatible storage and
-kubernetes clusters named `kind-k8s-eu` and `kind-k8s-us`:
 
-```bash
-bash scripts/setup.sh
-```
+## ☁️ Cost estimate for using the cloud (US Dollars)
 
-Run this comand to deploy the CloudNativePG operator and create postgres clusters
-named `pg-eu` and `pg-us` which both have three-node HA within their respective
-kubernetes clusters and also replicate data between the two kubernetes clusters:
+*For "US East 1" region as of 6-July-2025*
 
-```bash
-LEGACY=true demo/setup.sh
-```
+| Cloud | Instance | per-hour | per-day | per-week |
+| --- |  --- | --- | --- | --- |
+| AWS | m7g.xlarge | 0.1632  | 3.9168 | 27.4176
+| Azure | Standard_D4ps_v6 | 0.140 | 3.36 | 23.520
+| GCP | t2a-standard-4 | 0.154 | 3.696 | 25.872
 
-*note: there may be an issue with the new backup plugin at the moment?*
+You're of course welcome to try different families than those above. These
+suggestions are targeting the lowest price point that will provide a
+consistent and reliable experience.
 
-A few useful tools to start exploring include `btop` to monitor server
-utilization, `lazydocker` to monitor the docker pods (aka k8s nodes),
-and `k9s` to explore the kubernetes clusters themselves.
+Besides trying fewer CPUs or less memory, there are also some options like
+bursting instance families or lower cost instance families like GCP's E2
+family. Note that even with 4 CPUs, CNPG playground baseline cpu utilization
+might run hot (maybe over 50% depending on what you're doing) - so if you
+try a bursting instance class then keep an eye on your cpu usage and your
+instance's baseline utilization for burst.
 
-Some aliases are preconfigured:
-* `k` for `kubectl`
-* `kc` for `kubectl cnpg`
-* `c` for `kubectx`
-* `n` for `kubens`
+## 🖥️ Cost estimate for buying hardware to directly run Ubuntu (US Dollars)
 
-Auto-completion is configured for most commands and alaises.
+If you want an environment that can be left running more than a month or two
+then you can probably save money by purchasing hardware.
+
+A few hardware choices that are known to work well with Ubuntu:
+
+* Refurbished/Used Lenovo Thinkpad, Dell Latitude or HP EliteBook ... $300 to
+  $1000
+* Raspberry Pi 5 with 16gb RAM and 128gb MicroSD ... $200
+
+You're of course welcome to try different hardware too. These suggestions are
+targeting lower price points and trying to minimize the risks of hardware
+compatability problems and other unexpected & frustrating issues you might
+encounter.
+
+
 
 
 ## ❓ Frequently Asked Questions
@@ -115,7 +104,19 @@ with twelve nodes total, data replication between them, monitoring stacks
 on both, and a demo workload - all running on just your single personal
 machine or a single cloud instance.
 
-**What's the reasoning behind the vCPU/core rule of thumb?** Those of us
+*If you are running this in a Virtual Machine on your Windows or Mac laptop,
+the Virtual Machine you create needs to match the recommended specs, and you
+will need to leave enough resources for everything else running on your
+laptop. When configuring the VM, if you are asked to set a CPU count, assign
+`4 CPUs` to the VM. As with cloud environments, you are assigning virtual
+CPUs—not physical cores—to your virtual machine. VirtualBox, UTM (on mac)
+and WSL2 (on windows) should all work for installing and running Ubuntu in a
+VM.*
+
+
+**What's the vCPU/core rule of thumb? What's the reasoning behind it?** Rule
+of thumb for "what is a CPU": In cloud environments, count vCPUs. On your own
+hardware, count physical cores (not smt threads or operating system CPUs. Those of us
 who choose cloud environments will be using smaller instances - not whole
 servers. While noisy neighbors do sometimes happen, cloud providers generally
 don't run their physical hardware at high cpu utilization where SMT would
@@ -171,114 +172,3 @@ to run **`cnpg-playground`** in these environments too, and these ubuntu
 automation scripts will handle it if needed.
 
 
-## Cost estimate for using the cloud (US Dollars)
-
-*For "US East 1" region as of 6-July-2025*
-
-* AWS: m7g.xlarge ... 0.1632/hr ... 27.4176/week
-* Azure: Standard_D4ps_v6 ... 0.140/hr ... 23.520/week
-* GCP: t2a-standard-4 ... 0.154/hr ... 25.872/week
-
-You're of course welcome to try different families than those above. These
-suggestions are targeting the lowest price point that will provide a
-consistent and reliable experience.
-
-Besides trying fewer CPUs or less memory, there are also some options like
-bursting instance families or lower cost instance families like GCP's E2
-family. Note that even with 4 CPUs, CNPG playground baseline cpu utilization
-might run hot (maybe over 50% depending on what you're doing) - so if you
-try a bursting instance class then keep an eye on your cpu usage and your
-instance's baseline utilization for burst.
-
-## Cost estimate for buying hardware to directly run Ubuntu (US Dollars)
-
-If you want an environment that can be left running more than a month or two
-then you can probably save money by purchasing hardware.
-
-A few hardware choices that are known to work well with Ubuntu:
-
-* Refurbished/Used Lenovo Thinkpad, Dell Latitude or HP EliteBook ... $300 to
-  $1000
-* Raspberry Pi 5 with 16gb RAM and 128gb MicroSD ... $200
-
-You're of course welcome to try different hardware too. These suggestions are
-targeting lower price points and trying to minimize the risks of hardware
-compatability problems and other unexpected & frustrating issues you might
-encounter.
-
-
-# Detailed steps to get a freshly installed Ubuntu 25.04 server
-
-## Operating System Installation using official Ubuntu Server Installer
-
-If you're running in a Virtual Machine on your Windows or Mac laptop or if
-you want to install directly on hardware like a laptop or older server then
-download the Ubuntu 25.04 Server Installer ISO and use that to directly
-install ubuntu.
-
-https://ubuntu.com/download/server
-
-**⚠️ Do not use the Desktop installer! Make sure to use the Server installer,
-and don't install a desktop environment! ⚠️**
-
-VirtualBox and UTM have been used successfully; WSL2 should work in theory
-so please let us know if you test it successfully. Be careful of licensing
-on the VirtualBox extension pack - Reddit users have reported Oracle going
-after money after they noticed downloads. VirtualBox version 4 should not
-need the extension pack for these labs anyway.
-
-
-## Cloud Provider Setup Scripts
-
-Cloud instances with Ubuntu server preinstalled are readily available.
-
-Automated scripts are available for mac and linux to create and manage Ubuntu 25.04 server instances on AWS and Azure. These scripts prompt for configuration variables with sensible defaults and handle all the setup and cleanup automatically.
-
-### Prerequisites
-
-Before running the scripts, ensure you have:
-- AWS CLI configured (`aws configure`) for AWS scripts
-- Azure CLI installed and logged in (`az login`) for Azure scripts
-- Appropriate permissions to create and manage cloud resources
-
-### AWS Setup and Teardown
-
-**Setup:**
-```bash
-bash lab/cloud-setup/aws-setup.sh
-```
-
-**Teardown:**
-```bash
-bash lab/cloud-setup/aws-teardown.sh
-```
-
-The AWS scripts will:
-- Create an EC2 instance with Ubuntu 25.04 on ARM64 architecture
-- Configure security groups for SSH (port 22) and RDP (port 3389) access
-- Set up proper tagging for easy identification
-- Prompt for region, instance name, key pair, instance type, and disk size
-- Default to `m7g.xlarge` instance type (4 vCPUs, 16GB RAM)
-
-### Azure Setup and Teardown
-
-**Setup:**
-```bash
-bash lab/cloud-setup/azure-setup.sh
-```
-
-**Teardown:**
-```bash
-bash lab/cloud-setup/azure-teardown.sh
-```
-
-The Azure scripts will:
-- Create a VM with Ubuntu 25.04 on ARM64 architecture
-- Set up a new resource group
-- Configure network security for SSH and RDP access
-- Prompt for location, resource group name, VM name, VM size, and disk size
-- Default to `Standard_D4ps_v6` VM size (4 vCPUs, 16GB RAM)
-
-### Manual Setup (Alternative)
-
-If you prefer manual setup or need to customize beyond what the scripts offer, you can reference the scripts in `lab/cloud-setup/` and copy/paste the commands to run them manually.

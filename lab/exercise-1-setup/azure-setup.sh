@@ -140,4 +140,4 @@ echo "Connection Commands:"
 echo "  SSH: ssh ubuntu@$PUBLIC_IP"
 echo "  RDP: Use your RDP client to connect to $PUBLIC_IP:3389"
 echo
-echo "To clean up later, run: bash lab/cloud-setup/azure-teardown.sh"
+echo "To clean up later, run: bash lab/exercise-1-setup/azure-teardown.sh"
