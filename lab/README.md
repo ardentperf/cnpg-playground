@@ -56,20 +56,20 @@ can connect with either SSH or RDP and all terminals will automatically use a
 
 ## ☁️ Cost estimate for using the cloud (US Dollars)
 
-*For "US East 1" region as of 6-July-2025*
+*On-demand rates for "US East 1" region as of 6-July-2025 in US Dollars*
 
 | Cloud | Instance | per-hour | per-day | per-week |
 | --- |  --- | --- | --- | --- |
-| AWS | m7g.xlarge | 0.1632  | 3.9168 | 27.4176
-| Azure | Standard_D4ps_v6 | 0.140 | 3.36 | 23.520
-| GCP | t2a-standard-4 | 0.154 | 3.696 | 25.872
+| AWS | m7g.xlarge | $ 0.1632  | $ 3.9168 | $ 27.4176
+| Azure | Standard_D4ps_v6 | $ 0.140 | $ 3.36 | $ 23.520
+| GCP | t2a-standard-4 | $ 0.154 | $ 3.696 | $ 25.872
 
 You're of course welcome to try different families than those above. These
 suggestions are targeting the lowest price point that will provide a
 consistent and reliable experience.
 
-Besides trying fewer CPUs or less memory, there are also some options like
-bursting instance families or lower cost instance families like GCP's E2
+Besides trying fewer CPUs or less memory, there are also some options like spot
+instances or bursting instance families or lower cost instance families like GCP's E2
 family. Note that even with 4 CPUs, CNPG playground baseline cpu utilization
 might run hot (maybe over 50% depending on what you're doing) - so if you
 try a bursting instance class then keep an eye on your cpu usage and your
