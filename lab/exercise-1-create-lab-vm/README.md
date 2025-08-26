@@ -6,7 +6,7 @@ VirtualBox is recommended for local installations because it's fairly similar
 across windows and mac and linux, so it's easier for us to help answer your
 questions and get you up and running.
 
-If you've never installed the MSVC redistributable, the you might also need
+On windows, if you've never installed the MSVC redistributable, the you might also need
 to download and install this first (it's required by VirtualBox):
 
 https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
