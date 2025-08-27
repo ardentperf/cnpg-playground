@@ -5,6 +5,12 @@
 Welcome to **`cnpg-playground`**, a local learning environment designed for
 learning and experimenting with CloudNativePG using Docker and Kind.
 
+## CloudNativePG Lab
+
+Do you want to try the CNPG Playground - but you don't want to spend time tweaking `sysctl fs.inotify` on Linux, or wrestling with WSL on Windows, or getting Rancher & KinD cooperating on your Mac?
+
+[The *CloudNativePG LAB*](lab/README.md) hands you a ready-to-use, batteries-included, runs-anywhere Virtual Machine with the CNPG Playground and some Lab Exercises. For more details, look at [lab/README.md](lab/README.md).
+
 ## Prerequisites
 
 Ensure you have the latest available versions of the following tools installed
