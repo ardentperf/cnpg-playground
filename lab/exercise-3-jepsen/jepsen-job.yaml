@@ -21,7 +21,7 @@
 # The configuration below (500 keys with uniform distribution, 250 writes per key and 50 concurrent writers)
 # is optimized for throughput to detect any cases where data is lost during cluster reconfigurations.
 #
-# The duration of the test run in seconds is determined by --time-limit (seconds) and --test-count (loops).
+# The duration of the test run is determined by --time-limit (seconds) and --test-count (loops).
 #
 # Additional useful commands:
 #   k9s
