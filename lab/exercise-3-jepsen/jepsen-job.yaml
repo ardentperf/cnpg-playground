@@ -4,10 +4,12 @@
 #   kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 #
 # After jepsen has been running for 20 or 30 seconds, copy/paste this command to continuously kill the primary pod:
-#   yes "$(printf '1 \n %.0s' {1..30}) 60" | while read S; do sleep $S; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
+#   option 1: kill writer every 5 seconds
+#     while true; do sleep 5; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
+#   option 2: 30 seconds of chaos followed by 60 seconds of sleep to give the cluster a chance to recover.
+#     yes "$(printf '5 \n %.0s' {1..6}) 60" | while read S; do sleep $S; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
 #
-# This command will loop on 30 seconds of chaos followed by 60 seconds of sleep to give the cluster a chance to recover.
-# It will often display the error "No resources found" but this is harmless.
+# the "delete pod" command will often display the error "No resources found" but this is harmless.
 #
 # To check results:
 #   kubectl get pod -l job-name=jepsenpg -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
