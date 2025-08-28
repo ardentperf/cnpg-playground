@@ -7,7 +7,7 @@
 #   option 1: kill writer every 5 seconds
 #     while true; do sleep 5; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
 #   option 2: 30 seconds of chaos followed by 60 seconds of sleep to give the cluster a chance to recover.
-#     yes "$(printf '3 \n %.0s' {1..10}) 60" | while read S; do sleep $S; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
+#     yes "$(printf '5 \n %.0s' {1..6}) 60" | while read S; do sleep $S; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
 #
 # the "delete pod" command will often display the error "No resources found" but this is harmless.
 #
