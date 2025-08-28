@@ -1,28 +1,30 @@
 ################ Kubernetes job that runs Jepsen against the CNPG cluster ################
 #
 # To run jepsen against the "pg-eu" cluster:    (can repeat this to re-run the test)
-#   kubectl replace --force -f lab/exercise-1-jepsen/jepsen-job.yaml
+#   kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 #
-# The default is to run for 5 minutes. Start killing pods right away, it will finish quickly!
-# Increase the test-count to run for longer.
+# After jepsen has been running for 20 or 30 seconds, copy/paste this command to continuously kill the primary pod:
+#   yes "$(printf '1 \n %.0s' {1..30}) 60" | while read S; do sleep $S; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
 #
-#   kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false
+# This command will loop on 30 seconds of chaos followed by 60 seconds of sleep to give the cluster a chance to recover.
+# It will often display the error "No resources found" but this is harmless.
 #
 # To check results:
 #   kubectl get pod -l job-name=jepsenpg -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
 #   kubectl logs -l job-name=jepsenpg --tail=-1
+#
+# If you see "1 failures" then there was data loss.
+# If you see "1 successes" then there was no data loss.
+# If you see "crashed" or "unknown" then re-run the test.
 #
 # Full jepsen results are automatically uploaded to a bucket in minio-eu object storage when the test completes.
 #
 # The configuration below (500 keys with uniform distribution, 250 writes per key and 50 concurrent writers)
 # is optimized for throughput to detect any cases where data is lost during cluster reconfigurations.
 #
-# The duration of the test run in seconds is determined by the --time-limit and --test-count arguments. Because
-# post-run history analysis can be resource intensive, it might be worth using test-count for longer duration
-# testing. There will be pauses between each test iteration. If you experiment with thresholds then please
-# share your learnings on CNPG Slack!
+# The duration of the test run in seconds is determined by --time-limit (seconds) and --test-count (loops).
 #
-# More useful commands:
+# Additional useful commands:
 #   k9s
 #   kubectl get pods -l  'cnpg.io/instanceRole=primary'
 #   kubectl cnpg status pg-eu
@@ -49,6 +51,7 @@ spec:
           command: ["sh","-exc"]
           args:
             - |
+              date
               cd /jepsenpg
               MC_ARCH=$(case $(uname -m) in x86_64) echo linux-amd64 ;; aarch64|arm64) echo linux-arm64 ;; esac)
               curl -fsSL https://dl.min.io/client/mc/release/$MC_ARCH/mc -o mc && chmod +x mc && mv mc /usr/local/bin/mc
@@ -62,7 +65,7 @@ spec:
                   --key-dist uniform \
                   --concurrency 50 \
                   --rate 500 \
-                  --time-limit 300 \
+                  --time-limit 360 \
                   --test-count 1 \
                   --existing-postgres --node pg-eu-rw.default.svc.cluster.local --postgres-user app --postgres-password $password >jepsen.out || true
 
