@@ -37,7 +37,9 @@ Inbound ports 22 and 3389 (port forwarding is fine)
 
 ## 🎯 Getting Started
 
-Run this on a fresh Ubuntu 25.04 Server:
+For detailed instructions go to [Lab Exercise 1: Creating a CNPG Lab Virtual Machine](exercise-1-create-lab-vm/README.md)
+
+TLDR/summary: Run these two commands on a fresh Ubuntu 25.04 Server.
 
 ```bash
 git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground  &&  git checkout tmp-work
@@ -47,11 +49,9 @@ git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground 
 bash lab/install.sh
 ```
 
-Installation time tends to run around 10-15 minutes.
-
+*Installation time tends to run around 10-15 minutes.
 When the script completes, it will reboot the server. After the reboot, you
-can connect with either SSH or RDP and all terminals will automatically use a
-`nix` devshell to enter an environment with tools for learning and exploring.
+can connect with Remote Desktop.*
 
 
 ## ☁️ Cost estimate for using the cloud (US Dollars)
