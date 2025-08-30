@@ -35,13 +35,11 @@ When installing Ubuntu:
 1. Choose the option to install the SSH server
 2. On the disk partition screen, you'll need to edit the partition sizes so that Ubuntu uses the whole disk. For some reason it only uses about half the disk by default.
 
-After Ubuntu is installed, make sure you have internet access by logging in and testing something like `curl www.google.com`.
+After Ubuntu is installed, make sure you have internet access by logging in and testing something like `curl example.com`
 
 ### Converting the Ubuntu 25.04 Server into a CNPG Lab VM
 
-Reference the [main CNPG Lab README](../README.md) for details.
-
-Run these commands to convert the Ubuntu 25.04 Server into a CNPG Lab VM:
+Run these two commands to convert the Ubuntu 25.04 Server into a CNPG Lab VM:
 
 ```bash
 git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground  &&  git checkout tmp-work
