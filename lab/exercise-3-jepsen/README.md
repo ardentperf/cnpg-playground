@@ -44,6 +44,12 @@ Examine `jepsen-job.yaml` to see how we have configured this test job. It runs f
 5 minutes and the backoffLimit and restartPolicy ensure that failures will not be
 retried for this specific test.
 
+Confirm your context is set to `kind-k8s-eu`:
+
+```bash
+c
+```
+
 To run the Kubernetes Job that executes Jepsen against `pg-eu`:
 
 ```bash
