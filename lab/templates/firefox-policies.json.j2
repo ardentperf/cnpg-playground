@@ -1,0 +1,59 @@
+{
+  "policies": {
+    "Bookmarks": [
+      {
+        "Title": "Lab Homepage",
+        "URL": "{{ homepage_url }}"
+      },
+      {
+        "Title": "CNPG Docs",
+        "URL": "https://cloudnative-pg.io/documentation/current/"
+      },
+      {
+        "Title": "CNPG GitHub",
+        "URL": "https://github.com/cloudnative-pg/cloudnative-pg"
+      },
+      {
+        "Title": "MinIO EU",
+        "URL": "http://localhost:19001"
+      },
+      {
+        "Title": "MinIO US",
+        "URL": "http://localhost:29001"
+      },
+      {
+        "Title": "Grafana EU",
+        "URL": "http://localhost:13000"
+      },
+      {
+        "Title": "Grafana US",
+        "URL": "http://localhost:23000"
+      }
+    ],
+    "Homepage": {
+      "URL": "{{ homepage_url }}",
+      "StartPage": "homepage"
+    },
+    "DisplayBookmarksToolbar": "always",
+    "DisableTelemetry": true,
+    "DisableFirefoxAccounts": true,
+    "DisableFirefoxStudies": true,
+    "DisableAppUpdate": true,
+    "DisableSystemAddonUpdate": true,
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "SkipOnboarding": true
+    },
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "NewTabPage": false,
+    "DontCheckDefaultBrowser": true,
+    "Preferences": {
+      "browser.toolbars.bookmarks.visibility": "always",
+      "browser.bookmarks.showImportBookmarks": false
+    }
+  }
+}
