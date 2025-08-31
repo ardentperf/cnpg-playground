@@ -15,7 +15,7 @@ Run this command to create infrastructure including S3-compatible storage and
 kubernetes clusters named `kind-k8s-eu` and `kind-k8s-us`:
 
 ```bash
-bash scripts/setup.sh
+scripts/setup.sh
 ```
 
 Run this comand to deploy the CloudNativePG operator and create postgres clusters
