@@ -1,34 +1,11 @@
 ################ Kubernetes job that runs Jepsen against the CNPG cluster ################
 #
-# To run jepsen against the "pg-eu" cluster:    (can repeat this to re-run the test)
-#   kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
-#
-# After jepsen has been running for 20 or 30 seconds, copy/paste this command to continuously kill the primary pod:
-#   while true; do sleep 5; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
-#
-# the "delete pod" command will often display the error "No resources found" but this is harmless.
-#
-# To check results:
-#   kubectl get pod -l job-name=jepsenpg -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
-#   kubectl logs -l job-name=jepsenpg --tail=-1
-#
-# If you see "1 failures" then there was data loss.
-# If you see "1 successes" then there was no data loss.
-# If you see "crashed" or "unknown" then re-run the test.
-#
-# Full jepsen results are automatically uploaded to a bucket in minio-eu object storage when the test completes.
-#
 # The configuration below (500 keys with uniform distribution, 250 writes per key and 50 concurrent writers)
 # is optimized for throughput to detect any cases where data is lost during cluster reconfigurations.
 #
 # The duration of the test run is determined by --time-limit (seconds) and --test-count (loops).
 #
-# Additional useful commands:
-#   k9s
-#   kubectl get pods -l  'cnpg.io/instanceRole=primary'
-#   kubectl cnpg status pg-eu
-#   kubectl cnpg psql pg-eu -- -c "select pg_stat_statements_reset(); select pg_sleep(1); select clock_timestamp(), left(query,40) query,calls,mean_exec_time,total_exec_time from pg_stat_statements where query not like 'select pg_sleep%' order by 5 desc limit 20;"
-#   kubectl cnpg psql pg-eu -- -c "select now(), query, wait_event_type, wait_event, count(*) from pg_stat_activity where state='active' and application_name like 'jepsen%' group by query,wait_event_type,wait_event;"
+# The docker container image is built from https://github.com/ardentperf/jepsenpg/tree/work (the "work" branch)
 #
 apiVersion: batch/v1
 kind: Job
@@ -50,13 +27,17 @@ spec:
           command: ["sh","-exc"]
           args:
             - |
+              # show the current timestamp (useful to know when the test started)
               date
               cd /jepsenpg
+
+              # download the minio client and set up an alias for minio-eu
               MC_ARCH=$(case $(uname -m) in x86_64) echo linux-amd64 ;; aarch64|arm64) echo linux-arm64 ;; esac)
               curl -fsSL https://dl.min.io/client/mc/release/$MC_ARCH/mc -o mc && chmod +x mc && mv mc /usr/local/bin/mc
               mc alias set cnpgobj http://minio-eu:9000 $ACCESS_KEY_ID $ACCESS_SECRET_KEY
               mc mb --ignore-existing cnpgobj/jepsenpg
 
+              # run the Jepsen test
               lein run test-all -w append --isolation read-committed --nemesis none --no-ssh \
                   --key-count 500 \
                   --max-writes-per-key 250 \
@@ -68,8 +49,10 @@ spec:
                   --test-count 1 \
                   --existing-postgres --node pg-eu-rw.default.svc.cluster.local --postgres-user app --postgres-password $password >jepsen.out || true
 
+              # tar up the results and upload to minio-eu
               tar czvf store-$(date +%Y%m%d-%H%M).tgz store/
               mc cp store-*.tgz cnpgobj/jepsenpg/
 
+              # print the results to the terminal and the termination log
               grep -A5 anomaly-types jepsen.out | tee -a /dev/termination-log || true
               tail -4 jepsen.out | tee -a /dev/termination-log
