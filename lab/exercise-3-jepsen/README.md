@@ -4,6 +4,7 @@
 - [Prerequisites](#prerequisites)
 - [Running the Jepsen Test](#running-the-jepsen-test)
   - [Run the Jepsen Test as a Kubernetes Job](#run-the-jepsen-test-as-a-kubernetes-job)
+  - [Wait until Jepsen has been RUNNING and READY for 20-30 seconds](#wait-until-jepsen-has-been-running-and-ready-for-20-30-seconds)
   - [Induce repeated primary failures](#induce-repeated-primary-failures)
   - [Check results](#check-results)
   - [Additional useful commands](#additional-useful-commands)
@@ -40,7 +41,7 @@ retries failures until the desired number of successful completions is reached,
 then stops.
 
 Examine `jepsen-job.yaml` to see how we have configured this test job. It runs for
-5 minutes and the backoffLimit and restartPolicy ensure that failures will not be
+6 minutes and the backoffLimit and restartPolicy ensure that failures will not be
 retried for this specific test.
 
 To run the Kubernetes Job that executes Jepsen against `pg-eu`:
@@ -51,9 +52,19 @@ kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 
 You can re-run the exact command above to start another test after one completes.
 
-### Induce repeated primary failures
+### Wait until Jepsen has been RUNNING and READY for 20-30 seconds
 
-**Wait until Jepsen has been running for 20-30 seconds.**
+You can see the Pod created by the Jepsen Job with `kubectl` or `k9s`. The first time
+you run jepsen, it may stay in `ContainerCreating` status for some time while it downloads
+the container from dockerhub.
+
+After the jepsen container is RUNNING and READY, **wait for 20-30 seconds** before you
+start to introduce chaos.
+
+![jepsen pod in creating state](images/jepsen-pod-creating.png)
+
+
+### Induce repeated primary failures
 
 After Jepsen has been running for 20–30 seconds, run this loop to continuously kill
 the current primary pod every 5 seconds.
@@ -64,6 +75,11 @@ while true; do sleep 5; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --g
 
 - Seeing "No resources found" intermittently is expected and harmless.
 - Press `CTRL-C` to stop the loop when you are done.
+
+You can watch the chaos unfold from `k9s`. You will see pods continually being killed and you will see CNPG bringing
+them back online.
+
+![jepsen test in progress](images/jepsen-test-in-progress.png)
 
 ### Check results
 
