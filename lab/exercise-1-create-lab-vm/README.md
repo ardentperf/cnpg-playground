@@ -50,7 +50,7 @@ bash lab/install.sh
 ```
 
 
-## Option 2: Use a compute instance from a Cloud Provider
+## Option 2: From your mac/linux, provision a compute instance from AWS or Azure
 
 Cloud instances with Ubuntu server preinstalled are readily available.
 
@@ -109,3 +109,5 @@ The Azure scripts will:
 All you need is a freshly installed Ubuntu 25.04 server. There are lots of ways
 to do this. You can use virtualization software (like UTM or Proxmox) and you
 can use cloud compute providers (like oracle cloud or digital ocean or linode).
+
+Just clone this repo and run the `install.sh` script on any clean Ubuntu 25.04 server.
