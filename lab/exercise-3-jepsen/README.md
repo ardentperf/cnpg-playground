@@ -47,7 +47,7 @@ retried for this specific test.
 To run the Kubernetes Job that executes Jepsen against `pg-eu`:
 
 ```bash
-kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
+k replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 ```
 
 You can re-run the exact command above to start another test after one completes.
@@ -75,7 +75,7 @@ continuously kill the current primary pod whenever there's a healthy replica.
 
 ```bash
 while true; do
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)'
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date
   until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
 done
 ```
@@ -93,11 +93,11 @@ them back online. Try using the `l` key to tail the logs for postgres pods durin
 When the job finishes, check the summary message and full logs:
 
 ```bash
-kubectl get pod -l job-name=jepsenpg -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
+k get pod -l job-name=jepsenpg -o jsonpath='{.items[0].status.containerStatuses[0].state.terminated.message}{"\n"}'
 ```
 
 ```bash
-kubectl logs -l job-name=jepsenpg --tail=-1
+k logs -l job-name=jepsenpg --tail=-1
 ```
 
 - `1 failures` means a failure (such as data loss) was detected.
@@ -110,14 +110,14 @@ General navigation and status:
 
 ```bash
 k9s
-kubectl get pods -l 'cnpg.io/instanceRole=primary'
-kubectl cnpg status pg-eu
+k get pod -l role=primary
+kc status pg-eu
 ```
 
 Inspect current queries and performance stats from Postgres:
 
 ```bash
-kubectl cnpg psql pg-eu -- -c "select pg_stat_statements_reset(); select pg_sleep(1); select clock_timestamp(), left(query,40) query,calls,mean_exec_time,total_exec_time from pg_stat_statements where query not like 'select pg_sleep%' order by 5 desc limit 20;"
+kc psql pg-eu -- -c "select pg_stat_statements_reset(); select pg_sleep(1); select clock_timestamp(), left(query,40) query,calls,mean_exec_time,total_exec_time from pg_stat_statements where query not like 'select pg_sleep%' order by 5 desc limit 20;"
 ```
 
 Monitor active Jepsen sessions and waits:
@@ -285,12 +285,12 @@ Repeat the jepsen test. Once synchronous replication is enabled, you should no l
 when killing the primary pod.
 
 ```bash
-kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
+k replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 ```
 
 ```
 while true; do
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)'
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date
   until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
 done
 ```
