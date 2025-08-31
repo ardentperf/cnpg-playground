@@ -97,8 +97,8 @@ kubectl get pod -l job-name=jepsenpg -o jsonpath='{.items[0].status.containerSta
 kubectl logs -l job-name=jepsenpg --tail=-1
 ```
 
-- `1 failures` means data loss was detected.
-- `1 successes` means no data loss was observed.
+- `1 failures` means a failure (such as data loss) was detected.
+- `1 successes` means no failures were observed.
 - `crashed` or `unknown` means the run was inconclusive; re-run the test.
 
 ### Additional useful commands
