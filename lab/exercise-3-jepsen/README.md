@@ -163,19 +163,19 @@ the contents.
 First open the file latency-raw.png - this has your overall timeline. You can get a general
 sense of how long failovers took from the client perspective.
 
-![file browser showing latency-raw](files-latency-raw.png)
+![file browser showing latency-raw](images/files-latency-raw.png)
 
 Here's an example of what this file looks like. The vertical blue bars are periods of
 successful transactions and the blank spaces with sparse red squares are period of
 unavailability:
 
-![example latency-raw](example-latency-raw.png)
+![example latency-raw](images/example-latency-raw.png)
 
 The folder `elle/incompatible-order` has the data loss details.
 
 Each file represents the timeline/history for one specific row in the table (by primary key).
 
-![example individual row history](individual-row-history.png)
+![example individual row history](images/individual-row-history.png)
 
 When you open one of these files, you're going to see the timeline. On the left side is a list
 of timestamps. At each timestamp, you see the value in that row get longer one committed
@@ -185,13 +185,13 @@ it continues appending but never gets the missing data back.
 
 Below, i've opened `15.html` which shows all reads of the row with primary key `15`:
 
-![example row 15](example-row-15.png)
+![example row 15](images/example-row-15.png)
 
 Remember that in this test, jepsen only ever appends values to the string. After scrolling to
 the second page, I can see that we lost about 3 seconds worth of committed durable data. The
 read at time `40.66` has lost all the updates between time `24.57` and time `27.42`.
 
-![example row 15 data loss](example-row-15-data-loss.png)
+![example row 15 data loss](images/example-row-15-data-loss.png)
 
 Next, we will enable Postgres synchronous replication and repeat the test.
 
@@ -235,7 +235,7 @@ postgresql:
 https://cloudnative-pg.io/documentation/current/replication/#quorum-based-synchronous-replication
 
 
-![enabling sync replication](sync-replication.png)
+![enabling sync replication](images/sync-replication.png)
 
 Use `kubectl cnpg status` to confirm that synchronous replication is now enabled.
 

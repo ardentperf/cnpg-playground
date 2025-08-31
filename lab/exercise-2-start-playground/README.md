@@ -147,19 +147,19 @@ Type `:clusters` to view CNPG postgres clusters in k8s. You should see one clust
 
 Select `pg-eu` and press `d` to describe it. Scroll down until you find the Postgres parameters.
 
-![k9s screenshot showing pg parameters](k9s-pg-parameters.png)
+![k9s screenshot showing pg parameters](images/k9s-pg-parameters.png)
 
 Now press the `e` key to open the cluster spec in an editor.  Find the `max_connections` parameter and change it to `200`.
 
 The default editor in the CNPG Lab is `nano`. Press `<CTRL-O>` to save the file, press `<ENTER>` to keep the same filename, and then press `<CTRL-X>` to exit the editor.
 
-![editor screenshot showing pg parameters](editor-pg-parameters.png)
+![editor screenshot showing pg parameters](images/editor-pg-parameters.png)
 
 Now type `:pods` to return to the pod view.  `pg-eu-1` should still be the primary pod. Select this pod then press the `l` key to view logs.
 
 Find the log messages indicating that Postgres was restarted.  (This is required to change the `max_connections` parameter.)
 
-![screenshot showing pg shutdown](postgres-shutdown.png)
+![screenshot showing pg shutdown](images/postgres-shutdown.png)
 
 Type `:q` and press enter to exit `k9s`
 
