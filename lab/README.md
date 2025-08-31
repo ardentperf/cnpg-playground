@@ -2,8 +2,8 @@
 
 - [Hardware Requirements](#-hardware-requirements)
 - [Getting Started](#-getting-started)
-- [Cost estimate for using the cloud (US Dollars)](#-cost-estimate-for-using-the-cloud-us-dollars)
-- [Cost estimate for buying hardware to directly run Ubuntu (US Dollars)](#-cost-estimate-for-buying-hardware-to-directly-run-ubuntu-us-dollars)
+- [Cost estimate for using the cloud (US Dollars)](#%EF%B8%8F-cost-estimate-for-using-the-cloud-us-dollars)
+- [Cost estimate for buying hardware to directly run Ubuntu (US Dollars)](#%EF%B8%8F-cost-estimate-for-buying-hardware-to-directly-run-ubuntu-us-dollars)
 - [Frequently Asked Questions](#-frequently-asked-questions)
 
 ---
