@@ -1,0 +1,51 @@
+export EDITOR=nano
+echo "Setting KUBECONFIG to {{ script_dir }}/k8s/kube-config.yaml"
+export KUBECONFIG={{ script_dir }}/k8s/kube-config.yaml
+cd {{ script_dir }}
+# Only auto-enter nix develop if not already inside, and only for login interactive shells
+if [ -z "$IN_NIX_SHELL" ] && [ -z "$CNPG_DEV_ENTERED" ] && [[ "$-" == *i* ]]; then
+    export CNPG_DEV_ENTERED=1
+    echo "Entering nix development environment..."
+    if nix develop .; then
+        echo "nix develop . completed successfully."
+    else
+        echo "nix develop . failed. Please check the output above for errors."
+    fi
+else
+    echo "Already inside a nix environment or already entered. Skipping 'nix develop .'."
+    echo ""
+    echo ""
+    echo "**********************************************************************"
+    echo "**                Welcome to the CloudNativePG Lab                  **"
+    echo "**                                                                  **"
+    echo "** ▣ Docker container  =  ⚙ Kubernetes node/server (KIND clusters)  **"
+    echo "**                                                                  **"
+    echo "**   ┌───────────────┐    ┌───────────────┐    ┌───────────────┐    **"
+    echo "**   │  Docker       │    │  Docker       │    │  Docker       │    **"
+    echo "**   │  Container    │    │  Container    │    │  Container    │    **"
+    echo "**   │  ┌─────────┐  │    │  ┌─────────┐  │    │               │    **"
+    echo "**   │  │  pod-1  │  │    │  │  pod-3  │  │    │ S3 API/Web UI │    **"
+    echo "**   │  └─────────┘  │    │  └─────────┘  │    │               │    **"
+    echo "**   │  ┌─────────┐  │    │  ┌─────────┐  │    │  {pg backup}  │    **"
+    echo "**   │  │  pod-2  │  │    │  │  pod-4  │  │    │               │    **"
+    echo "**   │  └─────────┘  │    │  └─────────┘  │    │ MinIO Object  │    **"
+    echo "**   │  Kubernetes   │    │  Kubernetes   │    │ Storage       │    **"
+    echo "**   │  Node/Server  │    │  Node/Server  │    └───────────────┘    **"
+    echo "**   └───────────────┘    └───────────────┘                         **"
+    echo "**                                                                  **"
+    echo "** A few useful commands:           <hint: try TAB to autocomplete> **"
+    echo "**   bat - syntax-highlighted file viewer                           **"
+    echo "**   btop - show system utilization (cpu, io, network, procs, etc)  **"
+    echo "**   lazydocker - terminal UI for Docker: nodes/servers in this Lab **"
+    echo "**   k9s - terminal UI for Kubernetes                               **"
+    echo "**   k or kubectl - Kubernetes command line tool                    **"
+    echo "**   kc or kubectl cnpg - CNPG plugin for kubectl                   **"
+    echo "**   c or kubectx - switch between Kubernetes contexts              **"
+    echo "**   n or kubens - switch between Kubernetes namespaces             **"
+    echo "**                                                                  **"
+    echo "** scripts/setup.sh                                                 **"
+    echo "**                   creates k8s-eu and k8s-us Kubernetes clusters  **"
+    echo "** LEGACY=true demo/setup.sh                                        **"
+    echo "**                   creates pg-eu and pg-us CloudNativePG clusters **"
+    echo "**********************************************************************"
+fi
