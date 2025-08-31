@@ -41,7 +41,7 @@ retries failures until the desired number of successful completions is reached,
 then stops.
 
 Examine `jepsen-job.yaml` to see how we have configured this test job. It runs for
-6 minutes and the backoffLimit and restartPolicy ensure that failures will not be
+5 minutes and the backoffLimit and restartPolicy ensure that failures will not be
 retried for this specific test.
 
 To run the Kubernetes Job that executes Jepsen against `pg-eu`:
@@ -66,18 +66,22 @@ start to introduce chaos.
 
 ### Induce repeated primary failures
 
-After Jepsen has been running for 20–30 seconds, run this loop to continuously kill
-the current primary pod every 5 seconds.
+For starting out, we're not using Jepsen's fault injection capabilities (called "nemesis").
+
+Instead, we take a simpler direct approach. This makes it easier to see exactly what's happening.
+
+After Jepsen has been running for 20–30 seconds, copy and paste this one-liner command to
+continuously kill the current primary pod every 10 seconds.
 
 ```bash
-while true; do sleep 5; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
+while true; do kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; sleep 10; done
 ```
 
 - Seeing "No resources found" intermittently is expected and harmless.
 - Press `CTRL-C` to stop the loop when you are done.
 
 You can watch the chaos unfold from `k9s`. You will see pods continually being killed and you will see CNPG bringing
-them back online.
+them back online. Try using the `l` key to tail the logs for postgres pods during chaos testing.
 
 ![jepsen test in progress](images/jepsen-test-in-progress.png)
 
@@ -280,5 +284,5 @@ when killing the primary pod.
 ```bash
 kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 
-while true; do sleep 5; kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; done
+while true; do kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; sleep 10; done
 ```
