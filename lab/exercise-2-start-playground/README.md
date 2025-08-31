@@ -1,5 +1,11 @@
 # Starting and Exploring the CNPG Playground
 
+- [Starting up the CNPG Playground](#starting-up-the-cnpg-playground)
+- [Explore the CNPG Playground from the Command Line](#explore-the-cnpg-playground-from-the-command-line)
+- [Explore the CNPG Playground with k9s](#explore-the-cnpg-playground-with-k9s)
+  - [k9s quick navigation](#k9s-quick-navigation)
+  - [editing a CNPG cluster](#editing-a-cnpg-cluster)
+
 ## Starting up the CNPG Playground
 
 Reference the [main CNPG Playground README](../../README.md) for more details

@@ -1,5 +1,17 @@
 # Ansible Playbook for Ubuntu 25.04 Desktop Setup
 
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+  - [Basic Usage](#basic-usage)
+  - [With Proxy Configuration](#with-proxy-configuration)
+- [Classroom Lab Setup](#classroom-lab-setup)
+- [What the Ansible Playbook Does](#what-the-ansible-playbook-does)
+- [Variables](#variables)
+- [Files Created](#files-created)
+- [Notes](#notes)
+
+---
+
 This Ansible playbook (`install-core.yml`) contains the core installation logic for setting up a desktop environment on Ubuntu 25.04 Server. It is designed to be called by the `install.sh` shell script wrapper, which handles prechecks and user interaction.
 
 ## Prerequisites

@@ -1,5 +1,14 @@
 # Creating a "CNPG Lab" Virtual Desktop
 
+- [Option 1: Run a VM on your laptop with VirtualBox](#option-1-run-a-vm-on-your-laptop-with-virtualbox)
+  - [Creating a VM and installing Ubuntu](#creating-a-vm-and-installing-ubuntu)
+  - [Converting the Ubuntu 25.04 Server into a CNPG Lab VM](#converting-the-ubuntu-2504-server-into-a-cnpg-lab-vm)
+- [Option 2: From your mac/linux, provision a compute instance from AWS or Azure](#option-2-from-your-maclinux-provision-a-compute-instance-from-aws-or-azure)
+  - [Prerequisites](#prerequisites)
+  - [AWS Setup and Teardown](#aws-setup-and-teardown)
+  - [Azure Setup and Teardown](#azure-setup-and-teardown)
+- [Other Options](#other-options)
+
 ## Option 1: Run a VM on your laptop with VirtualBox
 
 VirtualBox is recommended for local installations because it's fairly similar

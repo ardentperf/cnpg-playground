@@ -1,5 +1,13 @@
 # CloudNativePG Lab
 
+- [Hardware Requirements](#-hardware-requirements)
+- [Getting Started](#-getting-started)
+- [Cost estimate for using the cloud (US Dollars)](#-cost-estimate-for-using-the-cloud-us-dollars)
+- [Cost estimate for buying hardware to directly run Ubuntu (US Dollars)](#-cost-estimate-for-buying-hardware-to-directly-run-ubuntu-us-dollars)
+- [Frequently Asked Questions](#-frequently-asked-questions)
+
+---
+
 Do you want to try the CNPG Playground - but you don't want to spend time tweaking `sysctl fs.inotify` on Linux, or wrestling with WSL on Windows, or getting Rancher & KinD cooperating on your Mac?
 
 The *CloudNativePG LAB* hands you a ready-to-use, batteries-included, runs-anywhere Virtual Machine with the CNPG Playground and some Lab Exercises.
