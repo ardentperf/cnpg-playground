@@ -15,7 +15,7 @@
     user_password: ""
     # Project configuration
     script_dir: "{{ playbook_dir }}/.."
-    homepage_url: "https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/EXERCISES.md"
+    homepage_url: "https://github.com/ardentperf/cnpg-playground/blob/tmp-work/lab/EXERCISES.md#cnpg-lab-exercises"
 
   tasks:
     - name: Display proxy configuration
