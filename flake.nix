@@ -46,6 +46,9 @@
         pkgs.k9s
         pkgs.lazydocker
         pkgs.btop
+        pkgs.bat
+        pkgs.lazygit
+        pkgs.gh
      ];
     };
   });
