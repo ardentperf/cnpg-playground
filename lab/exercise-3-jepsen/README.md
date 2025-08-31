@@ -80,8 +80,7 @@ while true; do
 done
 ```
 
-- Seeing "No resources found" intermittently is expected and harmless.
-- Press `CTRL-C` to stop the loop when you are done.
+Press `CTRL-C` to stop the loop when you are done.
 
 You can watch the chaos unfold from `k9s`. You will see pods continually being killed and you will see CNPG bringing
 them back online. Try using the `l` key to tail the logs for postgres pods during chaos testing.
