@@ -26,8 +26,6 @@ kubernetes clusters and also replicate data between the two kubernetes clusters:
 LEGACY=true demo/setup.sh
 ```
 
-*note: there may be an issue with the new backup plugin at the moment?*
-
 A few useful tools to start exploring include `btop` to monitor server
 utilization, `lazydocker` to monitor the docker pods (aka k8s nodes),
 and `k9s` to explore the kubernetes clusters themselves.
