@@ -143,7 +143,7 @@ To quit from k9s, type `:q` and press `<ENTER>`.
 
 As an exercise, change the `max_connections` postgres parameter from `100` to `200`.
 
-Type `:clusters` to view CNPG postgres clusters in k8s. You should see one cluster named `pg-eu`. (if you see a "US" cluster then you are in the wrong context - type `:context` or use `c` from the command line to switch.)
+Type `:clusters` to view CNPG postgres clusters in k8s. You should see one cluster named `pg-eu`. (if you see a "US" cluster then you are in the wrong context; type `:context` or use `c` from the command line to switch.)
 
 Select `pg-eu` and press `d` to describe it. Scroll down until you find the Postgres parameters.
 
@@ -157,7 +157,7 @@ The default editor in the CNPG Lab is `nano`. Press `<CTRL-O>` to save the file,
 
 Now type `:pods` to return to the pod view.  `pg-eu-1` should still be the primary pod. Select this pod then press the `l` key to view logs.
 
-Find the log messages indicating that Postgres was restarted.  (This is required to change the `max_connections` parameter.)
+Find the log messages indicating that Postgres was restarted.  (A restart is required to change the `max_connections` parameter.)
 
 ![screenshot showing pg shutdown](images/postgres-shutdown.png)
 
