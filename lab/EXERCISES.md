@@ -15,11 +15,6 @@ Welcome to the CloudNativePG Lab Exercises! Get set up, explore the playground, 
 
 ### Playground Architecture
 
+The playground uses kind to run two Kubernetes clusters locally (named "EU" and "US") with the CloudNativePG operator installed in both. It provisions a primary PostgreSQL cluster (`pg-eu`) and a replica cluster (`pg-us`). It also provisions per‑region S3‑compatible object stores (MinIO) for backups and archiving. Demo manifests and jobs (including Jepsen) run inside the cluster to generate load and exercise failover and data‑safety features.
+
 ![CNPG Playground Architecture](../images/cnpg-playground-architecture.png)
-
-The playground runs a local Kubernetes cluster (kind) with the CloudNativePG operator. It provisions two PostgreSQL clusters (`pg-eu`, `pg-us`) and per‑region S3‑compatible object stores (MinIO) for backups and archiving. Demo manifests and jobs (including Jepsen) run inside the cluster to generate load and exercise failover and data‑safety features.
-
-- **Control plane**: kind-based Kubernetes with CNPG operator
-- **Data plane**: CNPG-managed Postgres clusters with streaming replication and automatic failover
-- **Storage**: Regional MinIO buckets (EU/US) for WAL archiving and backups
-- **Tooling**: `kubectl`, `k9s`, and provided setup/teardown scripts
