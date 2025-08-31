@@ -70,11 +70,14 @@ For starting out, we're not using Jepsen's fault injection capabilities (called 
 
 Instead, we take a simpler direct approach. This makes it easier to see exactly what's happening.
 
-After Jepsen has been running for 20–30 seconds, copy and paste this one-liner command to
-continuously kill the current primary pod every 10 seconds.
+After Jepsen has been running for 20–30 seconds, copy and paste this into your terminal window to
+continuously kill the current primary pod whenever there's a healthy replica.
 
 ```bash
-while true; do kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; sleep 10; done
+while true; do
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)'
+  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
+done
 ```
 
 - Seeing "No resources found" intermittently is expected and harmless.
@@ -286,5 +289,8 @@ kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 ```
 
 ```
-while true; do kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; sleep 10; done
+while true; do
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)'
+  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
+done
 ```
