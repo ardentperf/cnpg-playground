@@ -11,6 +11,15 @@
 
 ## Option 1: Run a VM on your laptop with VirtualBox
 
+### Confirm Laptop Power Settings
+
+Check you laptop's operating system power settings and make sure it's not
+configured to sleep or hibernate for less than 30 minutes of inactivity. The
+installation might take a little time, and we don't want the laptop to go to
+sleep while the installation is running.
+
+### Install VirtualBox
+
 VirtualBox is recommended for local installations because it's fairly similar
 across windows and mac and linux, so it's easier for us to help answer your
 questions and get you up and running.
@@ -38,11 +47,12 @@ need the extension pack for these labs anyway.
 
 ### Creating a VM and installing Ubuntu
 
-Create the Virtual Machine with 4 CPUs, 16 GB memory, and 100 GB disk.
+Create the Virtual Machine with at least 4 CPUs, 16 GB memory, and 100 GB disk.  (Increasing to 6 CPUs might not be a bad idea on some laptops, since laptop processors are sometimes a little less powerful.)
 
 When installing Ubuntu:
 1. Choose the option to install the SSH server
-2. On the disk partition screen, you'll need to edit the partition sizes so that Ubuntu uses the whole disk. For some reason it only uses about half the disk by default.
+2. On the disk partition screen, you'll need to edit the `ubuntu-lv` underneath the `DEVICES` heading so that Ubuntu uses the whole disk. For some reason it only uses about half the disk by default.
+3. Do not install any snaps (like docker, etcd, postgres, etc). The CNPG LAB install script takes care of everything; we just want an empty clean Ubuntu Server install.
 
 After Ubuntu is installed, make sure you have internet access by logging in and testing something like `curl example.com`
 
@@ -57,6 +67,8 @@ git clone https://github.com/ardentperf/cnpg-playground  &&  cd cnpg-playground 
 ```bash
 bash lab/install.sh
 ```
+
+*Important Note: You can re-run the `install.sh` scripts as many times as needed. If you run into unexpected problems, just re-run. You don't need to start over at the beginning.*
 
 
 ## Option 2: From your mac/linux, provision a compute instance from AWS or Azure
