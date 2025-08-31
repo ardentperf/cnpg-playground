@@ -283,6 +283,8 @@ when killing the primary pod.
 
 ```bash
 kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
+```
 
+```
 while true; do kubectl delete pod -l 'cnpg.io/instanceRole=primary' --grace-period=0 --force --wait=false; sleep 10; done
 ```
