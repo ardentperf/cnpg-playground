@@ -306,3 +306,25 @@ while true; do
   k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 8
 done
 ```
+
+Here’s an example screenshot after a test with synchronous replication enabled:
+
+![sync replication results](images/sync-replication-results.png)
+
+Drilling down into the test results, we can see from latency-raw.png that our periods of
+unavailability were slightly longer. This makes sense because we don’t want postgres to
+accept writes if there are no healthy replicas.
+
+Under the directory `elle/sccs` ("Strongly Connected Components" or SCCs), we can see a
+few graphs Jepsen has generated for dependency graph cycles that it detected during this
+test. The screenshot below shows two transactions:
+
+1. A transaction APPENDS the value 9 to record 71, before it READS record 185 (value 1)
+2. A transaction APPENDS the value 2 to record 185, before it READS record 71 (values 1-8)
+
+Logically, this does not make sense. Which transaction happens before the other? This kind
+of cycle anomaly is one of the differences between read-committed isolation and serializable
+isolation. Right now we have configured postgres in read-committed mode so Jepsen simply
+documents the cycles while considering the test successful.
+
+![sync replication details](images/sync-replication-details.png)
