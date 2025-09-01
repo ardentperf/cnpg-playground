@@ -16,7 +16,7 @@
 
 ### Confirm Laptop Power Settings
 
-Check you laptop's operating system power settings and make sure it's not
+Check your laptop's operating system power settings and make sure it's not
 configured to sleep or hibernate before something like 30 minutes of inactivity. The
 installation might take a little time, and we don't want the laptop to go to
 sleep while the installation is running.
