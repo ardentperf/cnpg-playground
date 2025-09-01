@@ -135,7 +135,7 @@ kc psql pg-eu -- -c "select pg_stat_statements_reset(); select pg_sleep(1); sele
 Monitor active Jepsen sessions and waits:
 
 ```bash
-k cnpg psql pg-eu -- -c "select now(), query, wait_event_type, wait_event, count(*) from pg_stat_activity where state='active' and application_name like 'jepsen%' group by query,wait_event_type,wait_event;"
+kc psql pg-eu -- -c "select now(), query, wait_event_type, wait_event, count(*) from pg_stat_activity where state='active' and application_name like 'jepsen%' group by query,wait_event_type,wait_event;"
 ```
 
 ## Viewing Details of Test Failures
