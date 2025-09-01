@@ -84,12 +84,12 @@ Instead, we take a simpler direct approach. This makes it easier to see exactly 
 
 After Jepsen has been running for 20–30 seconds, copy and paste this into your terminal window to
 continuously kill the current primary pod whenever there's a healthy replica (making sure there's
-at least 10 seconds between each kill).
+at least 8 seconds between each kill).
 
 ```bash
 while true; do
-  until k get pod -l role=replica | grep -q 1/1; do sleep 10; done
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 10
+  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 8
 done
 ```
 
@@ -300,9 +300,9 @@ when killing the primary pod.
 k replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 ```
 
-```
+```bash
 while true; do
-  until k get pod -l role=replica | grep -q 1/1; do sleep 10; done
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 10
+  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 8
 done
 ```
