@@ -29,7 +29,7 @@ Virtualization (HAV).
 
 On Windows, **Hyper-V** is the best choice.  Don't use WSL for the CNPG lab. It's
 probably best to avoid VirtualBox, because VirtualBox can't be used alongside
-WSL or Hyper-V and it requires special configuration to leverage VT-x/AND-V
+WSL or Hyper-V and it requires special configuration to leverage VT-x/AMD-V
 due to increasing Windows restrictions.
 
 On Mac, several options exist such as **UTM, VirtualBox and Parallels**. These
