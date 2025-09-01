@@ -58,6 +58,12 @@
         upgrade: yes
       become: yes
 
+    - name: Create flag file to indicate Cinnamon installation
+      file:
+        path: /etc/cinnamon-desktop-installed-by-cnpg-lab
+        state: touch
+      become: yes
+
     - name: Install all required packages (less than 15 minutes on fast internet)
       apt:
         name:
@@ -67,14 +73,6 @@
           - nix-bin
         state: present
       register: package_install
-      become: yes
-
-    - name: Create flag file after successful Cinnamon installation
-      file:
-        path: /etc/cinnamon-desktop-installed-by-cnpg-lab
-        state: touch
-        mode: '0644'
-      when: package_install.changed
       become: yes
 
     - name: Create Docker proxy configuration directory
