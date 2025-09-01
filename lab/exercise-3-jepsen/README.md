@@ -44,11 +44,17 @@ Examine `jepsen-job.yaml` to see how we have configured this test job. It runs f
 5 minutes and the backoffLimit and restartPolicy ensure that failures will not be
 retried for this specific test.
 
-Confirm your context is set to `kind-k8s-eu`:
+Delete the US replica cluster to free up some additional CPU (we don't need the US cluster for this lab). Then confirm your context is set to `kind-k8s-eu`:
 
 ```bash
-c
+k delete cluster pg-us --context kind-k8s-us
 ```
+
+```bash
+k config current-context
+```
+
+*(Output of `k config current-context` should be `kind-k8s-eu`.)*
 
 To run the Kubernetes Job that executes Jepsen against `pg-eu`:
 
@@ -77,12 +83,13 @@ For starting out, we're not using Jepsen's fault injection capabilities (called 
 Instead, we take a simpler direct approach. This makes it easier to see exactly what's happening.
 
 After Jepsen has been running for 20–30 seconds, copy and paste this into your terminal window to
-continuously kill the current primary pod whenever there's a healthy replica.
+continuously kill the current primary pod whenever there's a healthy replica (making sure there's
+at least 10 seconds between each kill).
 
 ```bash
 while true; do
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date
-  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
+  until k get pod -l role=replica | grep -q 1/1; do sleep 10; done
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 10
 done
 ```
 
@@ -295,7 +302,7 @@ k replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 
 ```
 while true; do
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date
-  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
+  until k get pod -l role=replica | grep -q 1/1; do sleep 10; done
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 10
 done
 ```
