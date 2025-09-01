@@ -1,6 +1,9 @@
 # Creating a "CNPG Lab" Virtual Desktop
 
-- [Option 1: Run a VM on your laptop with VirtualBox](#option-1-run-a-vm-on-your-laptop-with-virtualbox)
+- [Option 1: Run a VM on your laptop](#option-1-run-a-vm-on-your-laptop)
+  - [Confirm Laptop Power Settings](#confirm-laptop-power-settings)
+  - [Install HAV-Capable Virtualization Software](#install-hav-capable-virtualization-software)
+  - [Download Ubuntu 25.04 Server ISO](#download-ubuntu-2504-server-iso)
   - [Creating a VM and installing Ubuntu](#creating-a-vm-and-installing-ubuntu)
   - [Converting the Ubuntu 25.04 Server into a CNPG Lab VM](#converting-the-ubuntu-2504-server-into-a-cnpg-lab-vm)
 - [Option 2: From your mac/linux, provision a compute instance from AWS or Azure](#option-2-from-your-maclinux-provision-a-compute-instance-from-aws-or-azure)
@@ -9,45 +12,44 @@
   - [Azure Setup and Teardown](#azure-setup-and-teardown)
 - [Other Options](#other-options)
 
-## Option 1: Run a VM on your laptop with VirtualBox
+## Option 1: Run a VM on your laptop
 
 ### Confirm Laptop Power Settings
 
 Check you laptop's operating system power settings and make sure it's not
-configured to sleep or hibernate for less than 30 minutes of inactivity. The
+configured to sleep or hibernate before something like 30 minutes of inactivity. The
 installation might take a little time, and we don't want the laptop to go to
 sleep while the installation is running.
 
-### Install VirtualBox
+### Install HAV-Capable Virtualization Software
 
-VirtualBox is recommended for local installations because it's fairly similar
-across windows and mac and linux, so it's easier for us to help answer your
-questions and get you up and running.
+Be careful with software like VirtualBox which can fall back to software
+virtualization; performance is very poor without Hardware Assisted
+Virtualization (HAV).
 
-On windows, if you've never installed the MSVC redistributable, the you might also need
-to download and install this first (it's required by VirtualBox):
+On Windows, **Hyper-V** is the best choice.  Don't use WSL for the CNPG lab. It's
+probably best to avoid VirtualBox, because VirtualBox can't be used alongside
+WSL or Hyper-V and it requires special configuration to leverage VT-x/AND-V
+due to increasing Windows restrictions.
 
-https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
+On Mac, several options exist such as **UTM, VirtualBox and Parallels**. These
+should all be able to leverage Harware-Assisted Virtualization.
 
-Download and install VirtualBox:
+On Linux, most desktop virtualization options use **KVM/QEMU under the hood**
+which leverage Hardware-Assisted Virtualization.
 
-https://www.virtualbox.org/wiki/Downloads
+### Download Ubuntu 25.04 Server ISO
 
-Download the Ubuntu 25.04 Server Installer ISO:
+Download the Ubuntu 25.04 Server installation ISO:
 
 https://ubuntu.com/download/server
 
-**⚠️ Do not get a Desktop installer! Make sure to get the Server installer!
+**⚠️ Do not download a Desktop installer! Make sure to get a Server installer!
 Make sure you have the right version! (25.04) ⚠️**
-
-Be careful of licensing
-on the VirtualBox extension pack - Reddit users have reported Oracle going
-after money after they noticed downloads. VirtualBox version 4 should not
-need the extension pack for these labs anyway.
 
 ### Creating a VM and installing Ubuntu
 
-Create the Virtual Machine with at least 4 CPUs, 16 GB memory, and 100 GB disk.  (Increasing to 6 CPUs might not be a bad idea on some laptops, since laptop processors are sometimes a little less powerful.)
+Create the Virtual Machine with at least 4 CPUs, 16 GB memory, and 100 GB disk.
 
 When installing Ubuntu:
 1. Choose the option to install the SSH server
@@ -73,18 +75,13 @@ bash lab/install.sh
 
 ## Option 2: From your mac/linux, provision a compute instance from AWS or Azure
 
-Cloud instances with Ubuntu server preinstalled are readily available.
-
-Automated scripts are available for mac and linux to create and manage Ubuntu 25.04 server instances on AWS and Azure. These scripts prompt for configuration variables with sensible defaults and handle all the setup and cleanup automatically.
-
-These automated scripts automatically convert the cloud instance into a CNPG Lab VM, after starting the instance. If you're using windows then you can ssh to any cloud instance with Ubuntu 25.04 Server and run the CNPG lab script to convert it.
+Automated scripts are available for mac and linux to create and manage Ubuntu 25.04 server instances on AWS and Azure. These scripts prompt for configuration variables with sensible defaults and handle all the setup and cleanup automatically. After provisioning cloud compute, they automatically convert the cloud instance into a CNPG Lab VM, after starting the instance.
 
 ### Prerequisites
 
 Before running the scripts, ensure you have:
-- AWS CLI configured (`aws configure`) for AWS scripts
+- AWS CLI configured (`aws configure`) and a key pair exists for AWS scripts
 - Azure CLI installed and logged in (`az login`) for Azure scripts
-- Appropriate permissions to create and manage cloud resources
 
 ### AWS Setup and Teardown
 
@@ -126,6 +123,9 @@ The Azure scripts will:
 
 
 ## Other Options
+
+If you're using windows then you can provision a cloud instance with Ubuntu 25.04
+Server from the console, then ssh and run the CNPG lab script to convert it.
 
 All you need is a freshly installed Ubuntu 25.04 server. There are lots of ways
 to do this. You can use virtualization software (like UTM or Proxmox) and you
