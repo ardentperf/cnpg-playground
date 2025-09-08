@@ -34,9 +34,6 @@ echo "Starting jepsen test 'writer-kill' at $(date)"
 echo "MIN_HEALTHY_REPLICAS_FOR_KILL: $MIN_HEALTHY_REPLICAS_FOR_KILL"
 echo "MIN_SECONDS_BETWEEN_KILLS: $MIN_SECONDS_BETWEEN_KILLS"
 
-kubectl run pingtest --image busybox:1.36 --overrides='{"spec": {"nodeName": "k8s-eu-worker3"}}' \
-              --restart=Never --rm -it -- ping -c 5 k8s-eu-worker4 || exit
-
 # change to the root directory of the CNPG playground
 cd $(dirname $(echo $KUBECONFIG))/..
 
@@ -49,6 +46,10 @@ kubectl delete cluster pg-us --context kind-k8s-us
 
 # use the cluster in the eu region
 kubectl config use-context kind-k8s-eu
+
+# quick ping test to check latency between nodes
+kubectl run pingtest --image busybox:1.36 --overrides='{"spec": {"nodeName": "k8s-eu-worker3"}}' \
+              --restart=Never --rm -it -- ping -c 5 k8s-eu-worker4 || exit
 
 # trigger download of the container image; kill job once download is complete
 kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
