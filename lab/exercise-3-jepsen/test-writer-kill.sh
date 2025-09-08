@@ -16,12 +16,12 @@
 #   cp -v $HOME/cnpg-playground/lab/exercise-3-jepsen/test-writer-kill.sh ./
 #   bash test-writer-kill.sh
 #
-#   egrep "(success|unknown|crash|failure)" jepsen-test_*|sort -k2|uniq -c
+#   egrep "(success|unknown|crash|failure)" jepsen-test_*|grep -c ' 0 '|sort -k2|uniq -c
 #   cd ..
 #   tar -cvf jepsen-test-${TEST_NAME}_$(date +%Y%m%d_%H%M%S).tar jepsen-test-${TEST_NAME}/
 #
 
-MIN_SECONDS_BETWEEN_KILLS=10                 # minimum time between kills
+MIN_SECONDS_BETWEEN_KILLS=${MIN_SECONDS_BETWEEN_KILLS:-10}           # minimum time between kills
 #MIN_HEALTHY_REPLICAS_FOR_KILL=1             # don't kill until these replicas are healthy; default will auto-detect count of all replicas
 
 
@@ -99,6 +99,7 @@ while true; do
     done
     jepsen_job_status="$(kubectl get job jepsenpg -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}')"
     if [ "$jepsen_job_status" == "True" ] || [ $(date +%s) -gt $loop_exit_time ]; then break; fi
+    kubectl exec svc/pg-eu-rw -c postgres -- psql -Xc 'select now(),pid,state,flush_lsn,flush_lag,sync_state,reply_time from pg_stat_replication'
     kubectl delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep $MIN_SECONDS_BETWEEN_KILLS
   done
 
