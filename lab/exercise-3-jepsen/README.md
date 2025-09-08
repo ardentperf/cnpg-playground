@@ -34,6 +34,27 @@ cluster and induces rapid primary failures to stress the system.
 
 ## Running the Jepsen Test
 
+### Set up for running the Jepsen Test
+
+The network performance is unrealistically fast when running in local docker
+containers. To make it easier to see data loss with async replication, introduce
+a more realistic level of latency between the kubernetes nodes. By default this
+script will configure the nodes with 1ms latency, but you can set the latency
+to other values if you would like.
+
+```bash
+bash lab/exercise-3-jepsen/docker-network-delay.sh
+```
+
+Next edit the `pg-eu` cluster configuration. Confirm that synchronous replication
+is not enabled, and set the number of instances to `2` in order to more easily
+see the data loss.
+
+```bash
+nano lab/demo/yaml/eu/pg-eu-legacy.yaml
+```
+
+
 ### Run the Jepsen Test as a Kubernetes Job
 
 A Kubernetes Job runs a one-off or batch task to completion. It creates Pods and
@@ -83,13 +104,14 @@ For starting out, we're not using Jepsen's fault injection capabilities (called 
 Instead, we take a simpler direct approach. This makes it easier to see exactly what's happening.
 
 After Jepsen has been running for 20–30 seconds, copy and paste this into your terminal window to
-continuously kill the current primary pod whenever there's a healthy replica (making sure there's
-at least 8 seconds between each kill).
+continuously kill the current primary pod (waiting for replicas to recover and making sure there's
+at least 10 seconds between each kill).
 
 ```bash
+REPLICA_COUNT=$(kubectl get pod -l role=replica 2>&1 | grep 1/1 | wc -l)
 while true; do
-  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 8
+  until (( $(k get pod -l role=replica | grep 1/1 | wc -l) == $REPLICA_COUNT)); do sleep 1; done
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 10
 done
 ```
 

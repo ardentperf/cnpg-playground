@@ -40,12 +40,12 @@ spec:
               # run the Jepsen test
               lein run test-all -w append --isolation read-committed --nemesis none --no-ssh \
                   --key-count 500 \
-                  --max-writes-per-key 250 \
+                  --max-writes-per-key 100 \
                   --max-txn-length 4 \
                   --key-dist uniform \
                   --concurrency 50 \
                   --rate 500 \
-                  --time-limit 300 \
+                  --time-limit 600 \
                   --test-count 1 \
                   --existing-postgres --node pg-eu-rw.default.svc.cluster.local --postgres-user app --postgres-password $password >jepsen.out || true
 
