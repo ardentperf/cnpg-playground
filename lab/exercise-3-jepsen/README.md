@@ -43,7 +43,7 @@ script will configure the nodes with 1ms latency, but you can set the latency
 to other values if you would like.
 
 ```bash
-bash lab/exercise-3-jepsen/docker-network-delay.sh
+bash lab/exercise-3-jepsen/docker-network-delay.sh on
 ```
 
 Next edit the `pg-eu` cluster configuration. Confirm that synchronous replication
