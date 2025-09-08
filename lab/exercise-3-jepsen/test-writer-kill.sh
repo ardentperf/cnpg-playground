@@ -79,8 +79,8 @@ while true; do
   # wait for 30 seconds (per instructions in exercise 3)
   sleep 30
 
-  # break out of the loops after job completion or after 13 minutes (in case jepsen hangs)
-  loop_exit_time=$(date -d "13 minutes" +%s)
+  # break out of the loops after job completion or after 7 minutes (in case jepsen hangs)
+  loop_exit_time=$(date -d "7 minutes" +%s)
   while true; do
     # wait for both replicas to be ready
     until (( $(kubectl get pod -l role=replica 2>&1 | grep 1/1 | wc -l) >= $MIN_HEALTHY_REPLICAS_FOR_KILL )); do
@@ -95,15 +95,15 @@ while true; do
 
   # log message if jepsen job is not complete
   if [ "$jepsen_job_status" != "True" ]; then
-    echo "Jepsen job did not complete after 13 minutes, exiting"
+    echo "Jepsen job did not complete after 7 minutes, exiting"
   fi
 
   # delete the existing cluster
   kubectl delete cluster pg-eu
   docker exec minio-eu rm -rf /data/backups/pg-eu
 
-  # jepsen should complete after cluster deletion, so wait up to 3 minutes before hard-killing the pod
-  loop_exit_time=$(date -d "3 minutes" +%s)
+  # jepsen should complete after cluster deletion, so wait up to 2 minutes before hard-killing the pod
+  loop_exit_time=$(date -d "2 minutes" +%s)
   while true; do
     jepsen_job_status="$(kubectl get job jepsenpg -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}')"
     if [ "$jepsen_job_status" == "True" ] || [ $(date +%s) -gt $loop_exit_time ]; then break; fi

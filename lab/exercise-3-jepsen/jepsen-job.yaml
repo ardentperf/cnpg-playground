@@ -45,7 +45,7 @@ spec:
                   --key-dist uniform \
                   --concurrency 50 \
                   --rate 500 \
-                  --time-limit 600 \
+                  --time-limit 300 \
                   --test-count 1 \
                   --existing-postgres --node pg-eu-rw.default.svc.cluster.local --postgres-user app --postgres-password $password >jepsen.out || true
 

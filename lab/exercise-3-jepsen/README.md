@@ -143,6 +143,9 @@ k logs -l job-name=jepsenpg --tail=-1
 - `1 successes` means no failures were observed.
 - `crashed` or `unknown` means the run was inconclusive; re-run the test.
 
+With asynchronous replication, the test has about a 50% failure rate. You may not see failure on the first attempt;
+be sure to try a few times.
+
 ### Additional useful commands
 
 General navigation and status:
@@ -328,9 +331,10 @@ k replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
 ```
 
 ```bash
+REPLICA_COUNT=$(kubectl get pod -l role=replica | grep pg-eu | wc -l)
 while true; do
-  until k get pod -l role=replica | grep -q 1/1; do sleep 1; done
-  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 8
+  until (( $(k get pod -l role=replica | grep 1/1 | wc -l) == $REPLICA_COUNT)); do sleep 1; done
+  k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 10
 done
 ```
 
@@ -355,3 +359,7 @@ isolation. Right now we have configured postgres in read-committed mode so Jepse
 documents the cycles while considering the test successful.
 
 ![sync replication details](images/sync-replication-details.png)
+
+After you've learned how the test works, you can explore the `test-writer-kill.sh` script
+which can automatically run this test in a loop. You can leave that running for extended
+periods of time to confirm failure rates over a large number of iterations.
