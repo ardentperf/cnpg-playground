@@ -54,6 +54,11 @@ see the data loss.
 nano demo/yaml/eu/pg-eu-legacy.yaml
 ```
 
+After you've edited the file, use `git` to see exactly what you are testing:
+
+```bash
+git diff
+```
 
 ### Run the Jepsen Test as a Kubernetes Job
 
