@@ -36,15 +36,20 @@ cluster and induces rapid primary failures to stress the system.
 
 ### Set up for running the Jepsen Test
 
-Edit the `pg-eu` cluster configuration:
-
-```bash
-nano demo/yaml/eu/pg-eu-legacy.yaml
-```
+Edit the `pg-eu` CNPG cluster (cf. lab exercise 2):
 
 * Confirm that synchronous replication is not enabled
+  * Make sure there is no block named `synchronous` under the `postgresql` section
 * Change instances from 3 to `instances: 2`
 * Under postgresql parameters, add `checkpoint_timeout: '30'`
+
+```
+spec:
+  instances: 2
+  postgresql:
+    parameters:
+      checkpoint_timeout: '30'
+```
 
 After you've edited the file, use `git` to confirm your changes:
 
