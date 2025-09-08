@@ -113,7 +113,7 @@ continuously kill the current primary pod (waiting for replicas to recover and m
 at least 10 seconds between each kill).
 
 ```bash
-REPLICA_COUNT=$(kubectl get pod -l role=replica 2>&1 | grep 1/1 | wc -l)
+REPLICA_COUNT=$(kubectl get pod -l role=replica | grep pg-eu | wc -l)
 while true; do
   until (( $(k get pod -l role=replica | grep 1/1 | wc -l) == $REPLICA_COUNT)); do sleep 1; done
   k delete pod -l role=primary --grace-period=0 --force --wait=false |& egrep -v '(Warn|found)' && date && sleep 10
