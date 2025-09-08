@@ -51,7 +51,7 @@ is not enabled, and set the number of instances to `2` in order to more easily
 see the data loss.
 
 ```bash
-nano lab/demo/yaml/eu/pg-eu-legacy.yaml
+nano demo/yaml/eu/pg-eu-legacy.yaml
 ```
 
 
