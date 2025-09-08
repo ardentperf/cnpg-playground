@@ -63,6 +63,14 @@ test_number=1
 while true; do
   echo "Setting up test $test_number at $(date)"
 
+  # wait up to 2 minutes until there are no terminating CNPG cluster pods or jepsen job pods
+  loop_exit_time=$(date -d "2 minutes" +%s)
+  while kubectl get pod -l cnpg.io/cluster=pg-eu 2>&1 | egrep -q 'Terminating' || \
+        kubectl get pod -l job-name=jepsenpg 2>&1 | egrep -q 'Terminating'; do
+    if [ $(date +%s) -gt $loop_exit_time ]; then break; fi
+    sleep 1
+  done
+
   # create a new clean cluster
   kubectl apply -f demo/yaml/eu/pg-eu-legacy.yaml
   kubectl wait --timeout 30m --for=condition=Ready cluster/pg-eu
