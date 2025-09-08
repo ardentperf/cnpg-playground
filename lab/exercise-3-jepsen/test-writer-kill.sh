@@ -11,7 +11,7 @@
 #   docker exec minio-eu rm -rf /data/jepsenpg      (make sure you've downloaded previous test results before running this)
 #
 #   TEST_NAME=writer-kill-async                     (or writer-kill-sync if you enabled sync replication)
-#   mkdir $HOME/jepsen-test-${TEST_NAME}
+#   mkdir -v $HOME/jepsen-test-${TEST_NAME}
 #   cd $HOME/jepsen-test-${TEST_NAME}
 #   cp -v $HOME/cnpg-playground/lab/exercise-3-jepsen/test-writer-kill.sh ./
 #   bash test-writer-kill.sh
