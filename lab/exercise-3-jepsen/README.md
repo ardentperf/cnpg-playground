@@ -36,25 +36,17 @@ cluster and induces rapid primary failures to stress the system.
 
 ### Set up for running the Jepsen Test
 
-The network performance is unrealistically fast when running in local docker
-containers. To make it easier to see data loss with async replication, introduce
-a more realistic level of latency between the kubernetes nodes. By default this
-script will configure the nodes with 1ms latency, but you can set the latency
-to other values if you would like.
-
-```bash
-bash lab/exercise-3-jepsen/docker-network-delay.sh on
-```
-
-Next edit the `pg-eu` cluster configuration. Confirm that synchronous replication
-is not enabled, and set the number of instances to `2` in order to more easily
-see the data loss.
+Edit the `pg-eu` cluster configuration:
 
 ```bash
 nano demo/yaml/eu/pg-eu-legacy.yaml
 ```
 
-After you've edited the file, use `git` to see exactly what you are testing:
+* Confirm that synchronous replication is not enabled
+* Change instances from 3 to `instances: 2`
+* Under postgresql parameters, add `checkpoint_timeout: '30'`
+
+After you've edited the file, use `git` to confirm your changes:
 
 ```bash
 git diff
