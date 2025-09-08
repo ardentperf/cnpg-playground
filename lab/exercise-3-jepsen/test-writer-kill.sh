@@ -7,8 +7,17 @@
 # generate a report. Jepsen test results are uploaded to a minio bucket by the job
 # spec from exercise 3
 #
+# Ths script automatically tears down and creates new clusters for each test. Any
+# configuration for testing needs to be done in the playground legacy CNPG config.
+#
+#   nano demo/yaml/eu/pg-eu-legacy.yaml
+#
+# Download previous test results with firefox on the remote desktop. Then clear
+# the minio bucket before running the next test:
 #
 #   docker exec minio-eu rm -rf /data/jepsenpg      (make sure you've downloaded previous test results before running this)
+#
+# Example flow for a long-run test:
 #
 #   TEST_NAME=writer-kill-async                     (or writer-kill-sync if you enabled sync replication)
 #   mkdir -v $HOME/jepsen-test-${TEST_NAME}
