@@ -114,6 +114,10 @@ done
 
 Press `CTRL-C` to stop the loop when you are done.
 
+**Important:** With asynchronous replication, the test doesn't detect data loss on every run. In an
+8-hour run on September 7 2025, there were 10 failures out of a total 65 iterations. You may not see
+failure on the first attempt; be sure to try several times.
+
 You can watch the chaos unfold from `k9s`. You will see pods continually being killed and you will see CNPG bringing
 them back online. Try using the `l` key to tail the logs for postgres pods during chaos testing.
 
@@ -134,9 +138,6 @@ k logs -l job-name=jepsenpg --tail=-1
 - `1 failures` means a failure (such as data loss) was detected.
 - `1 successes` means no failures were observed.
 - `crashed` or `unknown` means the run was inconclusive; re-run the test.
-
-With asynchronous replication, the test has about a 50% failure rate. You may not see failure on the first attempt;
-be sure to try a few times.
 
 ### Additional useful commands
 
