@@ -25,7 +25,7 @@
 #   cp -v $HOME/cnpg-playground/lab/exercise-3-jepsen/test-writer-kill.sh ./
 #   bash test-writer-kill.sh
 #
-#   egrep "(success|unknown|crash|failure)" jepsen-test_*|grep -c ' 0 '|sort -k2|uniq -c
+#   egrep '(success|unknown|crash|failure)' jepsen-test_*|sort -k2|uniq -c|grep -c ' 0 '
 #   cd ..
 #   tar -cvf jepsen-test-${TEST_NAME}_$(date +%Y%m%d_%H%M%S).tar jepsen-test-${TEST_NAME}/
 #
