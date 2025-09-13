@@ -62,7 +62,7 @@ kubectl run pingtest --image busybox:1.36 --overrides='{"spec": {"nodeName": "k8
 
 # trigger download of the container image; kill job once download is complete
 kubectl replace --force -f lab/exercise-3-jepsen/jepsen-job.yaml
-kubectl wait --for=condition=Ready -l job-name=jepsenpg pod
+kubectl wait --timeout=10m --for=condition=Ready -l job-name=jepsenpg pod
 kubectl delete job jepsenpg
 
 # delete the existing cluster
