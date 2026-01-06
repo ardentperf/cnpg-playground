@@ -48,12 +48,24 @@ for region in "${REGIONS[@]}"; do
 
     K8S_CLUSTER_NAME="${K8S_BASE_NAME}-${region}"
 
-# Deploy the Prometheus operator in the playground Kubernetes clusters
+    echo "🔥 Deploying Prometheus operator..."
     kubectl --context kind-${K8S_CLUSTER_NAME} create ns prometheus-operator || true
     kubectl kustomize ${GIT_REPO_ROOT}/monitoring/prometheus-operator | \
       kubectl --context kind-${K8S_CLUSTER_NAME} apply --force-conflicts --server-side -f -
+    
+    echo "⏳ Waiting for Prometheus CRDs to be ready..."
+    kubectl --context kind-${K8S_CLUSTER_NAME} wait --for condition=established --timeout=60s \
+      crd/servicemonitors.monitoring.coreos.com crd/prometheusrules.monitoring.coreos.com || true
 
-# We make sure that monitoring workloads are deployed in the infrastructure node.
+    echo "📊 Deploying kube-state-metrics..."
+    kubectl kustomize ${GIT_REPO_ROOT}/monitoring/kube-state-metrics | \
+      kubectl --context kind-${K8S_CLUSTER_NAME} apply --force-conflicts --server-side -f -
+
+    echo "🖥️  Deploying node-exporter..."
+    kubectl kustomize ${GIT_REPO_ROOT}/monitoring/node-exporter | \
+      kubectl --context kind-${K8S_CLUSTER_NAME} apply --force-conflicts --server-side -f -
+
+    echo "🔧 Deploying Prometheus instance and recording rules via kustomize..."
     kubectl kustomize ${GIT_REPO_ROOT}/monitoring/prometheus-instance | \
         kubectl --context=kind-${K8S_CLUSTER_NAME} apply --force-conflicts --server-side -f -
     kubectl --context=kind-${K8S_CLUSTER_NAME} -n prometheus-operator \
@@ -61,13 +73,34 @@ for region in "${REGIONS[@]}"; do
       --type='merge' \
       --patch='{"spec":{"template":{"spec":{"tolerations":[{"key":"node-role.kubernetes.io/infra","operator":"Exists","effect":"NoSchedule"}],"nodeSelector":{"node-role.kubernetes.io/infra":""}}}}}'
 
+    echo "🔧 Setting up kubelet metrics scraping..."
+    kubectl --context=kind-${K8S_CLUSTER_NAME} apply -f ${GIT_REPO_ROOT}/monitoring/prometheus-instance/servicemonitor-kubelet.yaml
+    NODE_IPS=$(kubectl --context kind-${K8S_CLUSTER_NAME} get nodes -o jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}')
+    cat <<EOF | kubectl --context=kind-${K8S_CLUSTER_NAME} apply -f -
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: kubelet
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: kubelet
+subsets:
+- addresses:
+$(for ip in ${NODE_IPS}; do echo "  - ip: ${ip}"; done)
+  ports:
+  - name: https-metrics
+    port: 10250
+    protocol: TCP
+EOF
+
     echo "-------------------------------------------------------------"
     echo " 📈 Provisioning Grafana resources for region: ${region}"
     echo "-------------------------------------------------------------"
 
 # Deploying Grafana operator
+    # Pinned to v5.21.3 due to CRD validation bug in v5.21.4+
     kubectl --context kind-${K8S_CLUSTER_NAME} apply --force-conflicts --server-side \
-      -f https://github.com/grafana/grafana-operator/releases/latest/download/kustomize-cluster_scoped.yaml
+      -f https://github.com/grafana/grafana-operator/releases/download/v5.21.3/kustomize-cluster_scoped.yaml
     kubectl --context kind-${K8S_CLUSTER_NAME} -n grafana \
       patch deployment grafana-operator-controller-manager \
       --type='merge' \
