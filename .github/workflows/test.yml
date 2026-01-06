@@ -1,0 +1,17 @@
+name: End-to-End Test (UI stub)
+
+on: 
+  workflow_dispatch:
+
+jobs: 
+  stub: 
+    runs-on: ubuntu-latest 
+    steps: 
+    - name: Checkout code 
+      uses: actions/checkout@v4
+
+    - name: Placeholder step
+      run: |
+        echo "This is a minimal workflow to expose 'End-to-End Test' in the Actions UI."
+        echo "Replace this with your full workflow or use it as a launcher for branch-specific runs."
+
