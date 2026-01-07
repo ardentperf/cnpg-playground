@@ -51,9 +51,14 @@ for region in eu us; do
     pass "${region}: Prometheus pod ready" || fail "${region}: Prometheus pod not ready"
   
   # Wait for Grafana pod
-  kubectl --context "${CTX}" wait --for=condition=Ready pod -l app=grafana \
-    -n grafana --timeout=90s && \
-    pass "${region}: Grafana pod ready" || fail "${region}: Grafana pod not ready"
+  if kubectl --context "${CTX}" wait --for=condition=Ready pod -l app=grafana -n grafana --timeout=90s; then
+    pass "${region}: Grafana pod ready"
+  else
+    log "${region}: Grafana pod not ready - checking Grafana Operator logs for errors..."
+    kubectl --context "${CTX}" -n grafana logs deployment/grafana-operator-controller-manager \
+      --all-containers --timestamps --tail=250 | grep -i "error" || true
+    fail "${region}: Grafana pod not ready"
+  fi
 done
 
 # Allow time for initial metrics scraping
