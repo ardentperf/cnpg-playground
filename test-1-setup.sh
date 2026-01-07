@@ -40,6 +40,10 @@ done
 log "Setting up monitoring stack..."
 if "${ROOT}/monitoring/setup.sh"; then pass "Monitoring setup"; else fail "Monitoring setup"; exit 1; fi
 
+# Allow time for pod creation and initial metrics scraping
+log "Waiting for pod creation and initial metrics scrape..."
+sleep 60
+
 # Test monitoring health (Prometheus + Grafana + node/system metrics)
 log "Testing monitoring stack health..."
 for region in eu us; do
@@ -60,10 +64,6 @@ for region in eu us; do
     fail "${region}: Grafana pod not ready"
   fi
 done
-
-# Allow time for initial metrics scraping
-log "Waiting for initial metrics scrape..."
-sleep 60
 
 for region in eu us; do
   # Test Prometheus HTTP and metrics
