@@ -109,6 +109,8 @@ for region in eu us; do
    kubectl apply --context kind-k8s-${region} -f \
      ${demo_yaml_path}/${region}/pg-${region}${legacy}.yaml
 
+   kubectl get podmonitors --context kind-k8s-${region}
+
    # Create the PodMonitor if Prometheus has been installed
    if check_crd_existence podmonitors.monitoring.coreos.com
    then
@@ -116,9 +118,13 @@ for region in eu us; do
        ${demo_yaml_path}/${region}/pg-${region}-podmonitor.yaml
    fi
 
+   kubectl get podmonitors --context kind-k8s-${region}
+
    # Wait for the cluster to be ready
    kubectl wait --context kind-k8s-${region} \
      --timeout 30m \
      --for=condition=Ready cluster/pg-${region}
+
+   kubectl get podmonitors --context kind-k8s-${region}
 
 done
