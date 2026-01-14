@@ -120,6 +120,8 @@ for region in eu us; do
      --timeout 30m \
      --for=condition=Ready cluster/pg-${region}
 
+   kubectl get podmonitors --context kind-k8s-${region} 
+
    # Create the PodMonitor if Prometheus has been installed
    # Placed at the end to avoid being affected by other operations
    # Wait 5 seconds for cluster to fully stabilize before creating PodMonitor
@@ -130,5 +132,11 @@ for region in eu us; do
      kubectl apply --context ${CONTEXT_NAME} -f \
        ${demo_yaml_path}/${region}/pg-${region}-podmonitor.yaml
    fi
+
+   kubectl get podmonitors --context kind-k8s-${region} 
+
+   sleep 5
+
+   kubectl get podmonitors --context kind-k8s-${region} 
 
 done
