@@ -128,7 +128,6 @@ for region in eu us; do
    #    cf. https://github.com/cloudnative-pg/cnpg-playground/issues/46
    if check_crd_existence podmonitors.monitoring.coreos.com
    then
-     sleep 5
      kubectl apply --context ${CONTEXT_NAME} -f \
        ${demo_yaml_path}/${region}/pg-${region}-podmonitor.yaml
    fi
