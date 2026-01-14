@@ -92,7 +92,7 @@ done
 cleanup
 
 log "Deploying PostgreSQL clusters...  start at $(date +%H:%M:%S)"
-if LEGACY=true "${ROOT}/demo/setup.sh"; then pass "PostgreSQL setup finish at $(date +%H:%M:%S)"; else fail "PostgreSQL setup"; exit 1; fi
+if TRUNK=true LEGACY=true "${ROOT}/demo/setup.sh"; then pass "PostgreSQL setup finish at $(date +%H:%M:%S)"; else fail "PostgreSQL setup"; exit 1; fi
 
 # Test PostgreSQL health and metrics
 log "Testing PostgreSQL clusters..."
@@ -120,6 +120,8 @@ for region in eu us; do
   PORT=9090; [ "$region" = "us" ] && PORT=9091
   kubectl port-forward -n prometheus-operator prometheus-prometheus-0 ${PORT}:9090 --context "${CTX}" &
   sleep 3
+
+  kubectl get podmonitors --context ${CTX}
   
   PGMETRICS=$(curl -s "http://localhost:${PORT}/api/v1/query?query=cnpg_collector_up" | jq -r '.data.result | length' || echo "0")
   [ "${PGMETRICS}" -ge 1 ] && \
