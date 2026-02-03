@@ -92,7 +92,7 @@ done
 cleanup
 
 log "Deploying PostgreSQL clusters...  start at $(date +%H:%M:%S)"
-if LEGACY=true "${ROOT}/demo/setup.sh"; then pass "PostgreSQL setup finish at $(date +%H:%M:%S)"; else fail "PostgreSQL setup"; exit 1; fi
+if "${ROOT}/demo/setup.sh"; then pass "PostgreSQL setup finish at $(date +%H:%M:%S)"; else fail "PostgreSQL setup"; exit 1; fi
 
 # Test PostgreSQL health and metrics
 log "Testing PostgreSQL clusters..."
