@@ -1,0 +1,83 @@
+# WARNING: This query will DESTROY a real Prometheus system!
+# 
+# Including ash_time (a timestamp) as a label is the WORST CASE for cardinality.
+# This forces Prometheus to create an index for almost every single data point,
+# leading to massive memory consumption, slow queries, and potential crashes.
+# 
+# This configuration is ONLY suitable for this lab environment.
+# DO NOT deploy this anywhere near a production Prometheus.
+#
+# However, this is very useful in the lab because it abuses Prometheus to let
+# us view top activity with 1-second granularity. It has no safety limits on
+# cardinality, so it will record everything happening in the system.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: active-session-history
+#  namespace: test
+  labels:
+    cnpg.io/reload: ""
+data:
+  custom-queries: |
+    ash_labonly_promkiller:
+      target_databases: 
+        - postgres
+      query: |
+        SELECT 
+          EXTRACT(EPOCH FROM ash.ash_time) timestamp__destroyer_of_prometheus
+          ,COALESCE(ash.datname, 'none') database_name
+          ,COALESCE(ash.usename, 'none') user_name
+          ,COALESCE(ash.application_name, 'none') application_name
+          ,COALESCE(ash.wait_event_type || ':' || ash.wait_event, 'none') wait_event
+          ,COALESCE(LEFT(sanitize_sql(ash.query), 40), 'none') query
+          ,COALESCE(ash.queryid::text, 'none') || ': ' || COALESCE(sanitize_sql(ash.query), 'none') query_full
+          ,COALESCE(sanitize_sql(ash.top_level_query), 'none') top_level_query
+          ,COALESCE(ash.backend_type, 'none') backend_type
+          ,COUNT(ash.*) cnt
+        FROM public.pgsentinel_poll_ash_data(99) ash
+        WHERE NOT (ash.wait_event_type = 'Activity' AND ash.wait_event = 'WalSenderMain')
+          AND ash.state = 'active'
+        GROUP BY 
+          ash.ash_time
+          ,ash.datname
+          ,ash.usename
+          ,ash.application_name
+          ,ash.wait_event_type
+          ,ash.wait_event
+          ,ash.query
+          ,ash.queryid
+          ,ash.top_level_query
+          ,ash.backend_type
+
+      metrics:
+        - timestamp__destroyer_of_prometheus:
+            usage: "LABEL"
+            description: "Timestamp of sampled activity"
+        - database_name:
+            usage: "LABEL"
+            description: "Database name where the SQL is executing"
+        - user_name:
+            usage: "LABEL"
+            description: "User who is executing the SQL"
+        - application_name:
+            usage: "LABEL"
+            description: "Application name registered by the client"
+        - wait_event:
+            usage: "LABEL"
+            description: "Current wait event, or CPU if active session is not waiting"
+        - query:
+            usage: "LABEL"
+            description: "Sanitized SQL query currently executing within the active session"
+        - query_full:
+            usage: "LABEL"
+            description: "Full SQL query with query ID currently executing within the active session"
+        - top_level_query:
+            usage: "LABEL"
+            description: "Top level query text"
+        - backend_type:
+            usage: "LABEL"
+            description: "Type of backend executing the query"
+        - cnt:
+            usage: "GAUGE"
+            description: "Count of active sessions when this sample was gathered"

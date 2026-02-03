@@ -1,0 +1,23 @@
+diff --git a/demo/yaml/eu/pg-eu.yaml b/demo/yaml/eu/pg-eu.yaml
+index 07ba6df..e0820fb 100644
+--- a/demo/yaml/eu/pg-eu.yaml
++++ b/demo/yaml/eu/pg-eu.yaml
+@@ -43,6 +43,18 @@ spec:
+       # Container images work fine with sysv shared memory
+       shared_memory_type: 'sysv'
+       dynamic_shared_memory_type: 'sysv'
++    extensions:
++      - name: pgsentinel
++        image:
++          reference: ghcr.io/ardentperf/pgsentinel:1.3.1-18-trixie
++    shared_preload_libraries:
++      - pgsentinel
++
++  monitoring:
++    customQueriesConfigMap:
++      - name: active-session-history
++        key: custom-queries
++
+ 
+   plugins:
+   - name: barman-cloud.cloudnative-pg.io

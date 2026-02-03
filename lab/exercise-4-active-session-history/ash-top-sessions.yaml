@@ -1,0 +1,215 @@
+# ash-top-sessions.yaml
+#
+#   This ConfigMap defines Prometheus custom queries for collecting Active Session History (ASH)
+#   data from PostgreSQL with careful attention to cardinality management. Unlike the lab-only
+#   promkiller variant (ash-labonly-promkiller.yaml), this configuration is targeted for
+#   production use where uncontrolled cardinality can overwhelm monitoring systems.
+#
+#   CARDINALITY CONTROL STRATEGY:
+#
+#   Most labels used in these queries are low cardinality, except for wait_event and query which
+#   are medium cardinality.
+#
+#   To prevent cardinality explosion, the main 'ash' query implements a ranking system that
+#   limits output to the top 40 distinct label combinations per data collection. The ranking 
+#   uses a carefully considered sort order:
+#     1. Non-client backends first (system activity always visible)
+#     2. Top wait events within the collection period (using totals per wait event)
+#     3. Query/user/etc with highest active session count
+#
+#   Any sessions beyond the top 40 are aggregated into an 'other' bucket, preserving visibility
+#   into system load while lowering cardinality. Importantly, if a query has a few lower-ranking 
+#   waits, those active session counts may end up aggregated into the "other" bucket.
+#
+#   AVERAGING STRATEGY:
+#
+#   The queries export 'avg_active_sessions' which is pre-calculated as cnt / sample_count in SQL.
+#   This provides a direct average of active sessions per sampling period. While this approach may
+#   introduce minor inaccuracies with aggregations when sampling periods are inconsistent, it 
+#   simplifies Grafana queries.
+#
+#   QUERY STRUCTURE:
+#
+#   - ash (uses slot 90): Main query providing detailed session breakdowns
+#   - ash_max_by_wait_event (uses slot 91): Tracks peak concurrency per wait event (top 5)
+#   - ash_max_by_query_full (uses slot 92): Tracks peak concurrency per query (top 10)
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: active-session-history
+#  namespace: test
+  labels:
+    cnpg.io/reload: ""
+data:
+  custom-queries: |
+    ash:
+      target_databases: 
+        - postgres
+      query: |
+        -- Materialize the base data to avoid calling pgsentinel_poll_ash_data() more than once on the same slot
+        WITH base_data AS MATERIALIZED (
+          SELECT 
+            COALESCE(ash.datname, 'none') database_name
+            ,COALESCE(ash.usename, 'none') user_name
+            ,COALESCE(ash.application_name, 'none') application_name
+            ,COALESCE(ash.wait_event_type || ':' || ash.wait_event, 'none') wait_event
+            ,COALESCE(LEFT(sanitize_sql(ash.query), 40), 'none') query
+            ,COALESCE(ash.queryid::text, 'none') || ': ' || COALESCE(sanitize_sql(ash.query), 'none') query_full
+            ,COALESCE(sanitize_sql(ash.top_level_query), 'none') top_level_query
+            ,COALESCE(ash.backend_type, 'none') backend_type
+            ,CASE WHEN ash.backend_type = 'client backend' THEN 1 ELSE 0 END as be_pri
+            ,COUNT(ash.*)::numeric / NULLIF(MAX(ash.sample_count), 0) as aas
+            ,SUM(COUNT(ash.*)) OVER (PARTITION BY ash.wait_event_type, ash.wait_event) as wait_total_cnt
+          FROM public.pgsentinel_poll_ash_data(90) ash
+          WHERE NOT (ash.wait_event_type = 'Activity' AND ash.wait_event = 'WalSenderMain')
+            AND ash.state = 'active'
+          GROUP BY 
+            ash.datname
+            ,ash.usename
+            ,ash.application_name
+            ,ash.wait_event_type
+            ,ash.wait_event
+            ,ash.query
+            ,ash.queryid
+            ,ash.top_level_query
+            ,ash.backend_type
+        )
+        ,ranked_events AS (
+          SELECT 
+            -- Change the threshold (40) below to show a different number of top queries
+            -- Sorting: 1) non-client backends first, 2) wait events by total count across all time, 3) by aas
+            CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE database_name END as database_name
+            ,CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE user_name END as user_name
+            ,CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE application_name END as application_name
+            ,CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE wait_event END as wait_event
+            ,CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE query END as query
+            ,CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE query_full END as query_full
+            ,CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE top_level_query END as top_level_query
+            ,CASE WHEN ROW_NUMBER() OVER (ORDER BY be_pri, wait_total_cnt DESC, aas DESC) > 40 THEN 'other' ELSE backend_type END as backend_type
+            ,aas
+          FROM base_data
+        )
+        SELECT 
+          database_name
+          ,user_name
+          ,application_name
+          ,wait_event
+          ,query
+          ,query_full
+          ,top_level_query
+          ,backend_type
+          ,SUM(aas) as avg_active_sessions
+        FROM ranked_events
+        GROUP BY 
+          database_name
+          ,user_name
+          ,application_name
+          ,wait_event
+          ,query
+          ,query_full
+          ,top_level_query
+          ,backend_type
+
+      metrics:
+        - database_name:
+            usage: "LABEL"
+            description: "Database name where the SQL is executing"
+        - user_name:
+            usage: "LABEL"
+            description: "User who is executing the SQL"
+        - application_name:
+            usage: "LABEL"
+            description: "Application name registered by the client"
+        - wait_event:
+            usage: "LABEL"
+            description: "Current wait event, or CPU if active session is not waiting"
+        - query:
+            usage: "LABEL"
+            description: "Sanitized SQL query currently executing within the active session"
+        - query_full:
+            usage: "LABEL"
+            description: "Full SQL query with query ID currently executing within the active session"
+        - top_level_query:
+            usage: "LABEL"
+            description: "Top level query text"
+        - backend_type:
+            usage: "LABEL"
+            description: "Type of backend executing the query"
+        - avg_active_sessions:
+            usage: "GAUGE"
+            description: "Average active sessions calculated as cnt / sample_count"
+
+    ash_max_by_wait_event:
+      target_databases: 
+        - postgres
+      query: |
+        -- Track the maximum concurrent sessions per wait event across all sampling periods
+        WITH per_time_counts AS (
+          SELECT 
+            ash.ash_time
+            ,COALESCE(ash.wait_event_type || ':' || ash.wait_event, 'none') as wait_event
+            ,COUNT(*) as cnt
+          FROM public.pgsentinel_poll_ash_data(91) ash
+          WHERE NOT (ash.wait_event_type = 'Activity' AND ash.wait_event = 'WalSenderMain')
+            AND ash.state = 'active'
+          GROUP BY ash.ash_time, ash.wait_event_type, ash.wait_event
+        )
+        ,max_by_wait_event AS (
+          SELECT 
+            wait_event
+            ,MAX(cnt) as cnt
+          FROM per_time_counts
+          GROUP BY wait_event
+          ORDER BY MAX(cnt) DESC
+          LIMIT 5
+        )
+        SELECT 
+          wait_event
+          ,cnt
+        FROM max_by_wait_event
+
+      metrics:
+        - wait_event:
+            usage: "LABEL"
+            description: "Wait event type and name"
+        - cnt:
+            usage: "GAUGE"
+            description: "Maximum concurrent sessions observed for this wait event during any single sampling period"
+
+    ash_max_by_query_full:
+      target_databases: 
+        - postgres
+      query: |
+        -- Track the maximum concurrent sessions per query across all sampling periods
+        WITH per_time_counts AS (
+          SELECT 
+            ash.ash_time
+            ,COALESCE(ash.queryid::text, 'none') || ': ' || COALESCE(sanitize_sql(ash.query), 'none') as query_full
+            ,COUNT(*) as cnt
+          FROM public.pgsentinel_poll_ash_data(92) ash
+          WHERE NOT (ash.wait_event_type = 'Activity' AND ash.wait_event = 'WalSenderMain')
+            AND ash.state = 'active'
+          GROUP BY ash.ash_time, ash.queryid, ash.query
+        )
+        ,max_by_query AS (
+          SELECT 
+            query_full
+            ,MAX(cnt) as cnt
+          FROM per_time_counts
+          GROUP BY query_full
+          ORDER BY MAX(cnt) DESC
+          LIMIT 10
+        )
+        SELECT 
+          query_full
+          ,cnt
+        FROM max_by_query
+
+      metrics:
+        - query_full:
+            usage: "LABEL"
+            description: "Query ID and sanitized SQL query text"
+        - cnt:
+            usage: "GAUGE"
+            description: "Maximum concurrent sessions observed for this query during any single sampling period"
