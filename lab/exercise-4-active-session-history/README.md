@@ -163,7 +163,7 @@ To import the dashboard:
 
 1. Open Grafana in your browser. In the CNPG Lab VM, Firefox has a bookmark for
    Grafana-EU, or you can navigate to `http://localhost:3000`
-   
+
 2. Log in with the default credentials:
    - Username: `admin`
    - Password: `admin`
@@ -251,15 +251,30 @@ The ASH dashboard provides flexible analysis through several features:
 
 **Panel 1: Average Active Sessions**
 
+In the background, pgsentinel is checking the state of every postgres connection
+every single second. While prometheus only gathers metrics from the database
+once a minute, this panel is able to present average active session values
+that are aggregated from all of the 1-second samples. This is much more powerful
+than only seeing data which is gathered once per minute.
+
 This stacked bar chart shows the average number of active sessions over time,
 grouped by your selected dimension. The height of each bar represents the
-average concurrency during that time period.
+average active session count during that time period.
+
+When viewing wider periods of time, prometheus will correctly average the
+values for larger periods.
 
 **Panel 2: Max Active Sessions by [dimension]**
 
-This panel shows the peak concurrency observed for each distinct value of your
-selected dimension. The legend is sorted by maximum value, showing which
-queries or wait events had the highest peak concurrency.
+This panel is able to look at all of the 1-second samples during the sampling
+period and display the highest observed number of active sessions during any
+interval.
+
+For example, if a critical lock is held for only 2 seconds - blocking hundreds
+of connections during those 2 seconds - then that data can easily be buried in
+average values. But this panel will find the peak and you'll see that there
+was a single moment in time when hundreds of connections were all on the same
+wait event or SQL query (using the query_full grouping).
 
 **Cardinality Control:**
 
@@ -272,7 +287,7 @@ The ranking prioritizes collecting comprehensive data for the top wait events:
 2. Top wait events within the collection period (using totals per wait event)
 3. Query/user/etc with highest active session count
 
-Importantly, if a query has a few lower-ranking waits, those active session
+Importantly, if a query includes a few lower-ranking waits, those active session
 counts may end up aggregated into the "other" bucket to reduce metric cardinality.
 
 ## Automation Script
