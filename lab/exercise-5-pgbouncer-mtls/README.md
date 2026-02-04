@@ -78,17 +78,17 @@ cert-manager integrates with an external certificate authority in production:
 
 ```mermaid
 flowchart TD
-    subgraph tier1 [Tier 1: Root CA - Simulates External Root CA]
+    subgraph tier1 [Tier 1: Root CA]
         rootCA["Root CA<br/>Self-signed (or imported)<br/>10-year validity<br/>Signs only intermediate CAs"]
     end
     
-    subgraph tier2 [Tier 2: Intermediate CAs - Online Issuers]
+    subgraph tier2 [Tier 2: Intermediate CAs]
         serverIntCA["Server Intermediate CA<br/>For PostgreSQL & PgBouncer servers"]
         clientIntCA["Client Intermediate CA<br/>For replication & user authentication"]
         poolerClientCA["Pooler Client CA<br/>For app client verification"]
     end
     
-    subgraph tier3 [Tier 3: End-Entity Certificates]
+    subgraph tier3 [Tier 3: End-Entity Certs]
         pgServerCert["PostgreSQL<br/>Server Cert"]
         poolerServerCert["PgBouncer<br/>Server Cert"]
         replCert["streaming_replica<br/>Client Cert"]

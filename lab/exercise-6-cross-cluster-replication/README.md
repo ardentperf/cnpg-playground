@@ -92,7 +92,7 @@ flowchart LR
     
     subgraph us [US Kubernetes Cluster - kind-k8s-us]
         pgus[pg-us Cluster<br/>Standby/DR<br/>Read-Only<br/>3 instances]
-        minio us[MinIO-US<br/>Backup Storage]
+        miniousend[MinIO-US<br/>Backup Storage]
     end
     
     pgeu -->|"Backup via<br/>barman-cloud"| minioeu
