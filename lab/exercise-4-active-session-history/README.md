@@ -292,19 +292,23 @@ counts may end up aggregated into the "other" bucket to reduce metric cardinalit
 
 ## Automation Script
 
-After you've learned how the ASH setup works, you can use the
-`test-ash-setup.sh` script to automatically configure and run the exercise:
+After you've learned how Active Session History monitoring works through the manual
+steps above, you can use the automation script to quickly set up the configuration:
 
 ```bash
+cd ~/cnpg-playground
 bash lab/exercise-4-active-session-history/test-ash-setup.sh
 ```
 
-The script will:
+The script automates all the manual steps you practiced:
+- Applies the PostgreSQL cluster patch
+- Creates the SQL functions
+- Applies the Prometheus custom queries ConfigMap
+- Initializes and runs pgbench to generate workload
 
-- Apply the PostgreSQL cluster patch
-- Create the SQL functions
-- Apply the ConfigMap
-- Initialize and run pgbench
-- Provide instructions for importing the Grafana dashboard
+This script is primarily used to validate that the manual steps in this README are correct
+and can also be used for quickly setting up the exercise environment for demonstrations.
+
+Output is logged to `ash-setup_<timestamp>.log`.
 
 The script creates a log file with timestamp for troubleshooting.
