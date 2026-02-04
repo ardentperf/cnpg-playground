@@ -1,0 +1,39 @@
+--- a/b/demo/yaml/eu/pg-eu.yaml	2026-02-04 14:27:07.489114072 +0000
++++ b/demo/yaml/eu/pg-eu.yaml	2026-02-04 14:27:16.973873568 +0000
+@@ -6,6 +6,23 @@
+   instances: 3
+   imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+ 
++  # Use cert-manager certificates instead of CNPG's default self-signed certs
++  certificates:
++    serverTLSSecret: pg-eu-server-cert
++    serverCASecret: pg-eu-server-ca
++    clientCASecret: pg-eu-client-ca
++    replicationTLSSecret: pg-eu-replication-cert
++
++  # Create roles for PgBouncer and application authentication
++  managed:
++    roles:
++      - name: pgbouncer
++        login: true
++      - name: app
++        login: true
++        inRoles:
++          - pg_write_all_data  # Required for pgbench to create tables
++
+   storage:
+     size: 1Gi
+ 
+@@ -43,6 +60,12 @@
+       # Container images work fine with sysv shared memory
+       shared_memory_type: 'sysv'
+       dynamic_shared_memory_type: 'sysv'
++    # Require certificate authentication and map pgbouncer CN to app role
++    pg_hba:
++      - hostssl all app all cert map=pooler
++      - hostssl all pgbouncer all cert
++    pg_ident:
++      - pooler pgbouncer app
+ 
+   plugins:
+   - name: barman-cloud.cloudnative-pg.io

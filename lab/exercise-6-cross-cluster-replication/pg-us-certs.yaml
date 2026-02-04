@@ -1,0 +1,132 @@
+# pg-us Certificates for US Cluster
+# Only the Root CA is copied from EU. Intermediate CAs are created fresh in US.
+# This mirrors production where each region has its own intermediate CAs.
+
+# Root CA Issuer (uses copied Root CA secret from EU)
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-us-root-ca-issuer
+spec:
+  ca:
+    secretName: pg-eu-root-ca  # Copied from EU cluster
+
+# US Server Intermediate CA
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-us-server-ca
+spec:
+  isCA: true
+  commonName: pg-us-server-intermediate-ca
+  secretName: pg-us-server-ca
+  issuerRef:
+    name: pg-us-root-ca-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-us-server-ca-issuer
+spec:
+  ca:
+    secretName: pg-us-server-ca
+
+---
+# US Client Intermediate CA
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-us-client-ca
+spec:
+  isCA: true
+  commonName: pg-us-client-intermediate-ca
+  secretName: pg-us-client-ca
+  issuerRef:
+    name: pg-us-root-ca-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-us-client-ca-issuer
+spec:
+  ca:
+    secretName: pg-us-client-ca
+
+---
+# Server Certificate for pg-us
+# Used by pg-us cluster for TLS encryption
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-us-server-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-us-server-cert
+spec:
+  secretName: pg-us-server-cert
+  usages:
+    - server auth
+  dnsNames:
+    # Include all CNPG service names for pg-us
+    - pg-us-rw.default.svc.cluster.local
+    - pg-us-ro.default.svc.cluster.local
+    - pg-us-r.default.svc.cluster.local
+    # Include individual pod names
+    - pg-us-1.default.svc.cluster.local
+    - pg-us-2.default.svc.cluster.local
+    - pg-us-3.default.svc.cluster.local
+  issuerRef:
+    name: pg-us-server-ca-issuer
+    kind: Issuer
+---
+# Replication Certificate for pg-us
+# Used by pg-us replicas to authenticate when pulling WAL from pg-eu
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-us-replication-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-us-replication-cert
+spec:
+  secretName: pg-us-replication-cert
+  usages:
+    - client auth
+  commonName: streaming_replica
+  issuerRef:
+    name: pg-us-client-ca-issuer
+    kind: Issuer
+---
+# Application Client Certificate for pg-us
+# Used by application clients in US cluster to connect to databases
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-us-app-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-us-app-cert
+spec:
+  secretName: pg-us-app-cert
+  usages:
+    - client auth
+  commonName: app
+  issuerRef:
+    name: pg-us-client-ca-issuer
+    kind: Issuer

@@ -1,0 +1,16 @@
+--- a/b/demo/yaml/us/pg-us.yaml	2026-02-04 15:06:56.977407061 +0000
++++ b/demo/yaml/us/pg-us.yaml	2026-02-04 15:07:00.179647315 +0000
+@@ -6,6 +6,13 @@
+   instances: 3
+   imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-bookworm
+ 
++  # Use certificates from US intermediate CAs (signed by same root as EU)
++  certificates:
++    serverTLSSecret: pg-us-server-cert
++    serverCASecret: pg-us-server-ca
++    clientCASecret: pg-us-client-ca
++    replicationTLSSecret: pg-us-replication-cert
++
+   storage:
+     size: 1Gi
+ 

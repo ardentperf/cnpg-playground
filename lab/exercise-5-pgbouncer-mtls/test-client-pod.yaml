@@ -1,0 +1,35 @@
+# Test pod for ad-hoc mTLS testing
+# Use: kubectl exec pgbouncer-mtls-test -- env PGSSLMODE=verify-full ...
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pgbouncer-mtls-test
+spec:
+  securityContext:
+    fsGroup: 26  # postgres group for file permissions
+    runAsUser: 26
+    runAsGroup: 26
+  containers:
+  - name: postgres-client
+    image: ghcr.io/cloudnative-pg/postgresql:16
+    command: ["sleep", "3600"]
+    volumeMounts:
+    - name: client-cert
+      mountPath: /etc/secrets/client
+      readOnly: true
+    - name: root-ca
+      mountPath: /etc/secrets/ca
+      readOnly: true
+  volumes:
+  - name: client-cert
+    secret:
+      secretName: pg-eu-app-cert
+      defaultMode: 0440
+  - name: root-ca
+    secret:
+      secretName: pg-eu-server-ca
+      defaultMode: 0440
+      items:
+      - key: ca.crt  # Mount root CA, not intermediate
+        path: ca.crt
+  restartPolicy: Never

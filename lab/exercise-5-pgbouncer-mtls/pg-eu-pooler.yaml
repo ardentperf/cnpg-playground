@@ -1,0 +1,52 @@
+# =============================================================================
+# PgBouncer Pooler with mTLS Authentication
+# =============================================================================
+#
+# This Pooler configuration enables full mTLS (mutual TLS) authentication:
+# - Clients must present valid certificates to connect to PgBouncer
+# - PgBouncer must present valid certificates to connect to PostgreSQL
+# - Both client and server certificates are verified (verify-full mode)
+#
+# Certificate Authentication Flow:
+# 1. Client (psql/pgbench) -> PgBouncer: Uses pg-eu-app-cert (signed by pooler-client-ca)
+# 2. PgBouncer -> PostgreSQL: Uses pg-eu-pooler-client-cert (signed by client-ca)
+#
+# =============================================================================
+
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: pg-eu-pooler-rw
+spec:
+  cluster:
+    name: pg-eu
+  
+  instances: 1
+  type: rw
+  
+  pgbouncer:
+    poolMode: session
+    
+    # Required for cert authentication compatibility
+    authQuery: "SELECT $1, NULL"
+    
+    parameters:
+      # Enforce TLS 1.3 and certificate-based authentication
+      server_tls_protocols: tlsv1.3
+      auth_type: cert
+      # Verify certificates in both directions
+      server_tls_sslmode: verify-full
+      client_tls_sslmode: verify-full
+    
+    # IMPORTANT: These names are from PgBouncer's perspective
+    # serverTLSSecret: Cert PgBouncer uses when acting as CLIENT to PostgreSQL
+    serverTLSSecret:
+      name: pg-eu-pooler-client-cert
+    serverCASecret:
+      name: pg-eu-server-ca
+    
+    # clientTLSSecret: Cert PgBouncer uses when acting as SERVER to clients
+    clientTLSSecret:
+      name: pg-eu-pooler-server-cert
+    clientCASecret:
+      name: pg-eu-pooler-client-ca

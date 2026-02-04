@@ -1,0 +1,70 @@
+# Test Job to validate mTLS configuration
+# Tests psql connection, pgbench init, and pgbench workload
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pgbouncer-mtls-test
+spec:
+  template:
+    spec:
+      securityContext:
+        fsGroup: 26  # postgres group for file permissions
+        runAsUser: 26
+        runAsGroup: 26
+      containers:
+      - name: test
+        image: ghcr.io/cloudnative-pg/postgresql:16
+        command:
+          - /bin/bash
+          - -c
+          - |
+            set -e
+            echo "=========================================="
+            echo "PgBouncer mTLS Test"
+            echo "=========================================="
+            
+            export PGSSLMODE=verify-full
+            export PGSSLCERT=/etc/secrets/client/tls.crt
+            export PGSSLKEY=/etc/secrets/client/tls.key
+            export PGSSLROOTCERT=/etc/secrets/ca/ca.crt
+            
+            echo "Test 1: psql connection..."
+            psql -h pg-eu-pooler-rw -U app postgres -c "SELECT '✓ psql mTLS SUCCESS' AS status, version();"
+            echo ""
+            
+            echo "Test 2: Verify SSL connection..."
+            psql -h pg-eu-pooler-rw -U app postgres -c "SELECT version, cipher, bits, client_dn FROM pg_stat_ssl WHERE pid = pg_backend_pid();"
+            echo ""
+            
+            echo "Test 3: pgbench init..."
+            PGPASSWORD="" pgbench -h pg-eu-pooler-rw -U app postgres -i -s 10
+            echo ""
+            
+            echo "Test 4: pgbench workload..."
+            PGPASSWORD="" pgbench -h pg-eu-pooler-rw -U app postgres -c 2 -j 2 -T 30 --progress=5
+            echo ""
+            
+            echo "=========================================="
+            echo "All tests PASSED!"
+            echo "=========================================="
+        volumeMounts:
+        - name: client-cert
+          mountPath: /etc/secrets/client
+          readOnly: true
+        - name: root-ca
+          mountPath: /etc/secrets/ca
+          readOnly: true
+      volumes:
+      - name: client-cert
+        secret:
+          secretName: pg-eu-app-cert
+          defaultMode: 0440
+      - name: root-ca
+        secret:
+          secretName: pg-eu-server-ca
+          defaultMode: 0440
+          items:
+          - key: ca.crt  # Mount root CA for chain verification
+            path: ca.crt
+      restartPolicy: Never
+  backoffLimit: 0

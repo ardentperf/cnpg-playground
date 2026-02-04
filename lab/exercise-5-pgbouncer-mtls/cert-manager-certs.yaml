@@ -1,0 +1,264 @@
+# =============================================================================
+# Three-Tier PKI for PostgreSQL with PgBouncer mTLS
+# =============================================================================
+#
+# This setup mirrors production cert-manager integration with an external CA where:
+# - Tier 1 (Root CA): Simulates an external Root CA (e.g., HashiCorp Vault, AWS Private CA)
+# - Tier 2 (Intermediate CAs): Online intermediate CAs for daily certificate operations
+# - Tier 3 (End-Entity Certs): Server and client certificates for actual TLS connections
+#
+# In production with an external CA:
+# - The Root CA is managed externally and rarely accessed
+# - cert-manager uses an external issuer (Vault, ACME, etc.) to request certificates
+# - This lab uses self-signed + CA issuers to simulate that hierarchy
+#
+# =============================================================================
+
+# =============================================================================
+# TIER 1: Root CA (simulates external CA)
+# =============================================================================
+
+# Bootstrap: Self-signed issuer to create the Root CA
+# In production, import the Root CA from your external CA system
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-bootstrap
+spec:
+  selfSigned: {}
+---
+# Root CA Certificate
+# In production, this would be imported from your external CA
+# Long validity (10 years) is typical for root CAs
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-root-ca
+spec:
+  isCA: true
+  commonName: pg-eu-root-ca
+  secretName: pg-eu-root-ca
+  duration: 87600h
+  issuerRef:
+    name: selfsigned-bootstrap
+    kind: Issuer
+---
+# Root CA Issuer
+# Simulates an external issuer (Vault, AWS Private CA, etc.)
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-eu-root-ca-issuer
+spec:
+  ca:
+    secretName: pg-eu-root-ca
+
+---
+# =============================================================================
+# TIER 2: Intermediate CAs (online issuers for daily operations)
+# =============================================================================
+
+# Server Intermediate CA
+# Signs all server certificates (PostgreSQL, PgBouncer)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-server-ca
+spec:
+  isCA: true
+  commonName: pg-eu-server-intermediate-ca
+  secretName: pg-eu-server-ca
+  issuerRef:
+    name: pg-eu-root-ca-issuer
+    kind: Issuer
+---
+# Server CA Issuer
+# Applications use this issuer to request server certificates
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-eu-server-ca-issuer
+spec:
+  ca:
+    secretName: pg-eu-server-ca
+---
+# Client Intermediate CA
+# Signs all client certificates for PostgreSQL authentication
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-client-ca
+spec:
+  isCA: true
+  commonName: pg-eu-client-intermediate-ca
+  secretName: pg-eu-client-ca
+  issuerRef:
+    name: pg-eu-root-ca-issuer
+    kind: Issuer
+---
+# Client CA Issuer
+# Applications use this issuer to request client certificates
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-eu-client-ca-issuer
+spec:
+  ca:
+    secretName: pg-eu-client-ca
+
+---
+# =============================================================================
+# TIER 3: End-Entity Certificates (Server Certificates)
+# =============================================================================
+
+# PostgreSQL Server Certificate
+# Used by PostgreSQL cluster for TLS encryption
+# CNPG will handle reloading when certificate is updated (via cnpg.io/reload label)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-eu-server-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-server-cert
+spec:
+  secretName: pg-eu-server-cert
+  usages:
+    - server auth
+  dnsNames:
+    # Include all CNPG service names for proper certificate verification
+    - pg-eu-rw
+    - pg-eu-rw.default.svc.cluster.local
+    - pg-eu-ro
+    - pg-eu-ro.default.svc.cluster.local
+    - pg-eu-r
+    - pg-eu-r.default.svc.cluster.local
+    # Include individual pod names for direct connections
+    - pg-eu-1.default.svc.cluster.local
+    - pg-eu-2.default.svc.cluster.local
+    - pg-eu-3.default.svc.cluster.local
+  issuerRef:
+    name: pg-eu-server-ca-issuer
+    kind: Issuer
+---
+# PgBouncer Pooler Server Certificate
+# Used by PgBouncer to accept client connections
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-eu-pooler-server-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-pooler-server-cert
+spec:
+  secretName: pg-eu-pooler-server-cert
+  usages:
+    - server auth
+  dnsNames:
+    - pg-eu-pooler-rw.default.svc.cluster.local
+  issuerRef:
+    name: pg-eu-server-ca-issuer
+    kind: Issuer
+
+---
+# =============================================================================
+# TIER 3: End-Entity Certificates (Client Certificates)
+# =============================================================================
+
+# streaming_replica Client Certificate
+# Used by PostgreSQL replicas to authenticate to the primary
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-eu-replication-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-replication-cert
+spec:
+  secretName: pg-eu-replication-cert
+  usages:
+    - client auth
+  commonName: streaming_replica
+  issuerRef:
+    name: pg-eu-client-ca-issuer
+    kind: Issuer
+---
+# Pooler Client Intermediate CA
+# Separate CA for verifying certificates of clients connecting TO PgBouncer
+# This allows PgBouncer to verify app certificates independently from PostgreSQL's client CA
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-pooler-client-ca
+spec:
+  isCA: true
+  commonName: pg-eu-pooler-client-ca
+  secretName: pg-eu-pooler-client-ca
+  issuerRef:
+    name: pg-eu-root-ca-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-eu-pooler-client-ca-issuer
+spec:
+  ca:
+    secretName: pg-eu-pooler-client-ca
+---
+# pgbouncer User Client Certificate
+# Used by PgBouncer to authenticate to PostgreSQL
+# Must have CN=pgbouncer to match PostgreSQL role name
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-eu-pooler-client-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-pooler-client-cert
+spec:
+  secretName: pg-eu-pooler-client-cert
+  usages:
+    - client auth
+  commonName: pgbouncer
+  issuerRef:
+    name: pg-eu-client-ca-issuer
+    kind: Issuer
+---
+# app User Client Certificate
+# Used by psql and pgbench to authenticate to PgBouncer
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-eu-app-cert
+  labels:
+    cnpg.io/reload: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-eu-app-cert
+spec:
+  secretName: pg-eu-app-cert
+  usages:
+    - client auth
+  commonName: app
+  issuerRef:
+    name: pg-eu-pooler-client-ca-issuer
+    kind: Issuer
