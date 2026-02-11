@@ -70,9 +70,9 @@ data:
             ,ash.application_name
             ,ash.wait_event_type
             ,ash.wait_event
-            ,ash.query
+            ,sanitize_sql(ash.query)
             ,ash.queryid
-            ,ash.top_level_query
+            ,sanitize_sql(ash.top_level_query)
             ,ash.backend_type
         )
         ,ranked_events AS (

@@ -15,6 +15,8 @@
  *   Filesystem persistence is required for this approach to work correctly on hot
  *   standby clusters. Slot identifiers are numeric as a simple way to prevent SQL
  *   injection concerns.
+ *
+ * TODO: need a way to know if we're overflowing the ring buffer. this happens easily.
  * 
  * Usage:
  *   SELECT * FROM pgsentinel_poll_ash_data(10);  -- Poll using slot 10
