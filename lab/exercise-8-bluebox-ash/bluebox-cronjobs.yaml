@@ -1,0 +1,299 @@
+---
+# Kubernetes CronJobs that replicate what bluebox's pg_cron setup would
+# normally schedule inside PostgreSQL. Since the standard CloudNativePG
+# PostgreSQL 18 image does not include pg_cron, we drive the same stored
+# procedures from Kubernetes instead — a cloud-native pattern that keeps the
+# database image unchanged.
+#
+# All jobs connect to pg-eu-rw (the CNPG primary service) using the cluster
+# superuser secret. They run inside the default namespace alongside pg-eu.
+#
+# Job schedule reference:
+#   generate-rentals:    every 5 minutes  (primary ASH workload driver)
+#   complete-rentals:    every 15 minutes
+#   process-lost:        daily at 02:00 UTC
+#   customer-activity:   daily at 03:00 UTC
+#   rebalance-inventory: weekly Sunday at 04:00 UTC
+#   analyze-tables:      daily at 01:00 UTC
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bluebox-generate-rentals
+  labels:
+    app: bluebox-cronjobs
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: bluebox-cronjobs
+            job: generate-rentals
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: psql
+              image: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+              command:
+                - psql
+                - -v
+                - ON_ERROR_STOP=1
+                - -c
+                - "CALL bluebox.generate_rentals();"
+              env:
+                - name: PGHOST
+                  value: pg-eu-rw
+                - name: PGPORT
+                  value: "5432"
+                - name: PGDATABASE
+                  value: bluebox
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: password
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bluebox-complete-rentals
+  labels:
+    app: bluebox-cronjobs
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: bluebox-cronjobs
+            job: complete-rentals
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: psql
+              image: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+              command:
+                - psql
+                - -v
+                - ON_ERROR_STOP=1
+                - -c
+                - "CALL bluebox.complete_rentals();"
+              env:
+                - name: PGHOST
+                  value: pg-eu-rw
+                - name: PGPORT
+                  value: "5432"
+                - name: PGDATABASE
+                  value: bluebox
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: password
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bluebox-process-lost
+  labels:
+    app: bluebox-cronjobs
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: bluebox-cronjobs
+            job: process-lost
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: psql
+              image: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+              command:
+                - psql
+                - -v
+                - ON_ERROR_STOP=1
+                - -c
+                - "CALL bluebox.process_lost_rentals();"
+              env:
+                - name: PGHOST
+                  value: pg-eu-rw
+                - name: PGPORT
+                  value: "5432"
+                - name: PGDATABASE
+                  value: bluebox
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: password
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bluebox-customer-activity
+  labels:
+    app: bluebox-cronjobs
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: bluebox-cronjobs
+            job: customer-activity
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: psql
+              image: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+              command:
+                - psql
+                - -v
+                - ON_ERROR_STOP=1
+                - -c
+                - "CALL bluebox.update_customer_activity();"
+              env:
+                - name: PGHOST
+                  value: pg-eu-rw
+                - name: PGPORT
+                  value: "5432"
+                - name: PGDATABASE
+                  value: bluebox
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: password
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bluebox-rebalance-inventory
+  labels:
+    app: bluebox-cronjobs
+spec:
+  schedule: "0 4 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: bluebox-cronjobs
+            job: rebalance-inventory
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: psql
+              image: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+              command:
+                - psql
+                - -v
+                - ON_ERROR_STOP=1
+                - -c
+                - "CALL bluebox.rebalance_inventory();"
+              env:
+                - name: PGHOST
+                  value: pg-eu-rw
+                - name: PGPORT
+                  value: "5432"
+                - name: PGDATABASE
+                  value: bluebox
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: password
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bluebox-analyze-tables
+  labels:
+    app: bluebox-cronjobs
+spec:
+  schedule: "0 1 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: bluebox-cronjobs
+            job: analyze-tables
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: psql
+              image: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+              command:
+                - psql
+                - -v
+                - ON_ERROR_STOP=1
+                - -c
+                - "ANALYZE bluebox.rental; ANALYZE bluebox.payment; ANALYZE bluebox.inventory;"
+              env:
+                - name: PGHOST
+                  value: pg-eu-rw
+                - name: PGPORT
+                  value: "5432"
+                - name: PGDATABASE
+                  value: bluebox
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: pg-eu-superuser
+                      key: password

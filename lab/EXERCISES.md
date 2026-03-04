@@ -10,6 +10,8 @@ Welcome to the CloudNativePG Lab Exercises! Get set up, explore the playground, 
 | [Exercise 4: Active Session History Monitoring](exercise-4-active-session-history/README.md) | Set up ASH monitoring using pgsentinel extension, custom Prometheus queries, and Grafana dashboards; generate workload with pgbench to visualize active sessions. |
 | [Exercise 5: PgBouncer with mTLS Authentication](exercise-5-pgbouncer-mtls/README.md) | Configure connection pooling with PgBouncer using mutual TLS; set up a three-tier PKI with cert-manager; test certificate-based authentication with psql and pgbench. |
 | [Exercise 6: Cross-Cluster Replication with mTLS](exercise-6-cross-cluster-replication/README.md) | Bootstrap the `pg-us` replica cluster from `pg-eu` backup using mTLS; configure disaster recovery topology across EU and US Kubernetes clusters with unified PKI. |
+| [Exercise 7: pgAdmin for CNPG](exercise-7-pgadmin/README.md) | Deploy pgAdmin in desktop mode against `pg-eu` using the `kubectl cnpg pgadmin4` plugin command; explore the cluster schema, extensions, and active sessions visually. |
+| [Exercise 8: Bluebox Workload with ASH Visualization](exercise-8-bluebox-ash/README.md) | Load the bluebox DVD rental database onto `pg-eu` using the PostGIS extension container; drive continuous rental activity with Kubernetes CronJobs; visualize the workload in the ASH Grafana dashboard. |
 
 ### Other Links
 

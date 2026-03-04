@@ -1,0 +1,62 @@
+# pgAdmin Helm values for the CNPG lab (demo/eval use only)
+#
+# Install with:
+#   helm install pgadmin4 oci://docker.io/dpage/pgadmin4-helm \
+#     -f lab/exercise-7-pgadmin/pgadmin-values.yaml
+#
+# Access via:
+#   kubectl port-forward service/pgadmin4 8090:80
+#   http://localhost:8090  (login: admin@pgadmin.org / admin)
+
+# Give every resource a clean, predictable name
+fullnameOverride: pgadmin4
+
+auth:
+  email: admin@pgadmin.org
+  password: admin
+
+# No PVC needed for a lab environment
+persistence:
+  enabled: false
+
+# Pre-register the pg-eu cluster so it appears in the Servers tree
+# immediately after login. pgAdmin will prompt for the PostgreSQL
+# password on first connection (retrieve from the pg-eu-superuser secret).
+serverDefinitions:
+  enabled: true
+  data:
+    "1":
+      Name: "pg-eu"
+      Group: "Servers"
+      Port: 5432
+      Username: postgres
+      Host: pg-eu-rw
+      MaintenanceDB: postgres
+      ConnectionParameters:
+        sslmode: prefer
+        connect_timeout: 10
+
+# Override security context to work on KIND.
+# python3.14 in the pgAdmin image has cap_net_bind_service=eip set as a file
+# capability. The Helm chart's init container that strips this capability looks
+# for the binary at /usr/bin/python3.* but the actual path is
+# /usr/local/bin/python3.14, so the strip silently fails.  Adding
+# NET_BIND_SERVICE to the container's allowed capabilities lets the kernel
+# honour the file capability without refusing execution for the non-root user.
+podSecurityContext:
+  fsGroup: 5050
+  runAsUser: 5050
+  runAsNonRoot: true
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 5050
+  seccompProfile:
+    type: Unconfined
+  capabilities:
+    add:
+      - NET_BIND_SERVICE
+    drop:
+      - ALL

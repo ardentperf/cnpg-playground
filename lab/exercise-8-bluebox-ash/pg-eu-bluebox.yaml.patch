@@ -1,0 +1,14 @@
+diff --git a/demo/yaml/eu/pg-eu.yaml b/demo/yaml/eu/pg-eu.yaml
+--- a/demo/yaml/eu/pg-eu.yaml
++++ b/demo/yaml/eu/pg-eu.yaml
+@@ -47,6 +47,11 @@ spec:
+       - name: pgsentinel
+         image:
+           reference: ghcr.io/ardentperf/pgsentinel:1.3.1-18-trixie
++      - name: postgis
++        image:
++          reference: ghcr.io/cloudnative-pg/postgis-extension:3.6.2-18-trixie
++        ld_library_path:
++          - system
+     shared_preload_libraries:
+       - pgsentinel
