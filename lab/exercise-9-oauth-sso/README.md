@@ -291,13 +291,14 @@ You should see `CN=pgadmin-proxy` and a validity period of ~1 year.
 ## Step 4: Create Your PostgreSQL Role
 
 PostgreSQL needs a role matching your Entra identity. The `entra_validator`
-extension extracts `preferred_username` from the JWT (e.g.,
-`user@company.com`) and `pg_ident` maps it to a PG role. The conventional
-mapping replaces `@` and `.` with `_`:
+extension extracts `preferred_username` from the JWT and `pg_ident` maps it
+to a PG role. The mapping replaces `@` and `.` with `_` — for example,
+`schneider@ardentperf.com` becomes `schneider_ardentperf_com`.
 
 ```bash
 # Derive your PG username from your UPN
-PG_USERNAME=$(echo "user@company.com" | tr '@.' '_')
+PG_USERNAME=$(echo "schneider@ardentperf.com" | tr '@.' '_')
+# -> schneider_ardentperf_com
 echo "PG username: $PG_USERNAME"
 ```
 
@@ -384,7 +385,7 @@ psql "host=pg-eu-rw \
 ```
 
 Your PG username is your UPN with `@` and `.` replaced by `_` — for example,
-`alice@contoso.com` becomes `alice_contoso_com`.
+`schneider@ardentperf.com` becomes `schneider_ardentperf_com`.
 
 psql will display:
 
