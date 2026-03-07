@@ -174,7 +174,7 @@ to `pg-eu`. Substitute your actual Entra values before applying.
 You can either apply the patch file directly:
 
 ```bash
-patch -p1 < lab/exercise-9-oauth-sso/pg-eu-oauth.yaml.patch
+patch -p1 < lab/exercise-8-oauth-sso/pg-eu-oauth.yaml.patch
 sed -i \
   -e "s/ENTRA_TENANT_ID/<your-tenant-id>/g" \
   -e "s/ENTRA_APP_ID/<your-client-id>/g" \
@@ -268,7 +268,7 @@ The pgAdmin identity passthrough relies on a TLS client certificate with
 rotates it automatically.
 
 ```bash
-kubectl apply -f lab/exercise-9-oauth-sso/pgadmin-proxy-cert.yaml
+kubectl apply -f lab/exercise-8-oauth-sso/pgadmin-proxy-cert.yaml
 ```
 
 Wait for the certificate to be issued:
@@ -332,7 +332,7 @@ support. Substitute your Entra values, then install:
 ```bash
 helm install pgadmin4-oauth oci://docker.io/dpage/pgadmin4-helm \
   --kube-context kind-k8s-eu \
-  -f lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml \
+  -f lab/exercise-8-oauth-sso/pgadmin-oauth-values.yaml \
   --set-string "config_local.data=PLACEHOLDER" \
   --wait --timeout 3m
 ```
@@ -347,7 +347,7 @@ helm install pgadmin4-oauth oci://docker.io/dpage/pgadmin4-helm \
 >   -e "s/ENTRA_TENANT_ID/<your-tenant-id>/g" \
 >   -e "s/ENTRA_CLIENT_ID/<your-client-id>/g" \
 >   -e "s/ENTRA_CLIENT_SECRET/<your-client-secret>/g" \
->   lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml > "$VALUES"
+>   lab/exercise-8-oauth-sso/pgadmin-oauth-values.yaml > "$VALUES"
 >
 > helm install pgadmin4-oauth oci://docker.io/dpage/pgadmin4-helm \
 >   --kube-context kind-k8s-eu \
@@ -544,7 +544,7 @@ After working through the exercise manually, you can validate the full setup
 end-to-end with the automation script:
 
 ```bash
-bash lab/exercise-9-oauth-sso/test-oauth-setup.sh
+bash lab/exercise-8-oauth-sso/test-oauth-setup.sh
 ```
 
 The script prompts for your Entra values and then automates all steps: applying

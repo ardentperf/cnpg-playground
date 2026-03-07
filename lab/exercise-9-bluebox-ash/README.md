@@ -99,7 +99,7 @@ the extensions list):
 
 ```bash
 cd ~/cnpg-playground
-patch -p1 < lab/exercise-8-bluebox-ash/pg-eu-bluebox.yaml.patch
+patch -p1 < lab/exercise-9-bluebox-ash/pg-eu-bluebox.yaml.patch
 ```
 
 Verify the changes:
@@ -210,7 +210,7 @@ The `pg_dump` of a single database does not include role definitions (those are
 cluster-global). Create them first:
 
 ```bash
-kc psql pg-eu < lab/exercise-8-bluebox-ash/bluebox-preload.sql
+kc psql pg-eu < lab/exercise-9-bluebox-ash/bluebox-preload.sql
 ```
 
 Verify the database was created:
@@ -292,7 +292,7 @@ same schedule — the only difference is the scheduler lives outside the
 database.
 
 ```bash
-k apply -f lab/exercise-8-bluebox-ash/bluebox-cronjobs.yaml
+k apply -f lab/exercise-9-bluebox-ash/bluebox-cronjobs.yaml
 ```
 
 Verify all six CronJobs are created:
@@ -447,7 +447,7 @@ To remove bluebox and the CronJobs (while leaving pg-eu and pgsentinel intact):
 
 ```bash
 # Remove CronJobs
-k delete -f lab/exercise-8-bluebox-ash/bluebox-cronjobs.yaml
+k delete -f lab/exercise-9-bluebox-ash/bluebox-cronjobs.yaml
 
 # Drop the bluebox database and roles
 kc psql pg-eu -- -c "DROP DATABASE bluebox;"
@@ -470,7 +470,7 @@ automation script runs the full end-to-end setup:
 
 ```bash
 cd ~/cnpg-playground
-bash lab/exercise-8-bluebox-ash/test-bluebox-setup.sh
+bash lab/exercise-9-bluebox-ash/test-bluebox-setup.sh
 ```
 
 The script automates all steps:

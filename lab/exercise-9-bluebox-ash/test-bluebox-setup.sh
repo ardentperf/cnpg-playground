@@ -23,7 +23,7 @@
 #
 # Usage:
 #   cd ~/cnpg-playground
-#   bash lab/exercise-8-bluebox-ash/test-bluebox-setup.sh
+#   bash lab/exercise-9-bluebox-ash/test-bluebox-setup.sh
 #
 # Output is logged to bluebox-test_<timestamp>.log
 #
@@ -96,7 +96,7 @@ if grep -q "postgis-extension" demo/yaml/eu/pg-eu.yaml; then
   PATCH_APPLIED=true
 else
   echo "Applying pg-eu-bluebox.yaml.patch..."
-  if patch -p1 < lab/exercise-8-bluebox-ash/pg-eu-bluebox.yaml.patch; then
+  if patch -p1 < lab/exercise-9-bluebox-ash/pg-eu-bluebox.yaml.patch; then
     echo "Patch applied successfully"
     PATCH_APPLIED=false
   else
@@ -212,7 +212,7 @@ fi
 if [ "$SKIP_LOAD" = false ]; then
   # Create roles and database
   echo "Creating bluebox roles and database on pg-eu..."
-  kubectl cnpg psql pg-eu < lab/exercise-8-bluebox-ash/bluebox-preload.sql
+  kubectl cnpg psql pg-eu < lab/exercise-9-bluebox-ash/bluebox-preload.sql
   echo "  ✓ Roles and database created"
   echo ""
 
@@ -274,7 +274,7 @@ echo "Step 4: Deploy Kubernetes CronJobs"
 echo "=========================================="
 echo ""
 
-kubectl apply -f lab/exercise-8-bluebox-ash/bluebox-cronjobs.yaml
+kubectl apply -f lab/exercise-9-bluebox-ash/bluebox-cronjobs.yaml
 echo ""
 
 echo "Waiting for CronJobs to be registered..."

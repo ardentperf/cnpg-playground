@@ -4,7 +4,7 @@
 # This script configures the pg-eu cluster for Entra ID OAuth authentication
 # and deploys pgAdmin with OAuth identity passthrough.
 #
-# Usage: bash lab/exercise-9-oauth-sso/test-oauth-setup.sh
+# Usage: bash lab/exercise-8-oauth-sso/test-oauth-setup.sh
 #
 # What it does:
 #   1. Checks prerequisites

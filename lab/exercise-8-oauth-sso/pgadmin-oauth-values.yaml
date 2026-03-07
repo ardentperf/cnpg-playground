@@ -12,13 +12,13 @@
 #
 # Install with:
 #   helm install pgadmin4-oauth oci://docker.io/dpage/pgadmin4-helm \
-#     -f lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml \
+#     -f lab/exercise-8-oauth-sso/pgadmin-oauth-values.yaml \
 #     --set config_local.data="$(
 #       sed \
 #         -e 's/ENTRA_TENANT_ID/<your-tenant-id>/g' \
 #         -e 's/ENTRA_CLIENT_ID/<your-client-id>/g' \
 #         -e 's/ENTRA_CLIENT_SECRET/<your-client-secret>/g' \
-#         lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml \
+#         lab/exercise-8-oauth-sso/pgadmin-oauth-values.yaml \
 #         | grep -A999 'config_local_data_start' | grep -B999 'config_local_data_end' \
 #       )"
 #
