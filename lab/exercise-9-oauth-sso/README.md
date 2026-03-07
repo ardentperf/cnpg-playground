@@ -171,27 +171,78 @@ to `pg-eu`. Substitute your actual Entra values before applying.
 
 ### Apply the patch
 
+You can either apply the patch file directly:
+
 ```bash
 patch -p1 < lab/exercise-9-oauth-sso/pg-eu-oauth.yaml.patch
-```
-
-Substitute your Tenant ID and Client ID into the patched file:
-
-```bash
 sed -i \
   -e "s/ENTRA_TENANT_ID/<your-tenant-id>/g" \
   -e "s/ENTRA_APP_ID/<your-client-id>/g" \
   demo/yaml/eu/pg-eu.yaml
 ```
 
+Or edit `demo/yaml/eu/pg-eu.yaml` by hand. The changes are:
+
+**1. Add the `entra-validator` extension** (in the `postgresql.extensions` list,
+after any existing extensions):
+
+```yaml
+      - name: entra-validator
+        image:
+          reference: ghcr.io/ardentperf/postgres-entra-oauth-validator:18-dev-trixie
+        ld_library_path:
+          - system
+```
+
+**2. Add `parameters`** (in the `postgresql` section, after `shared_preload_libraries`):
+
+```yaml
+    parameters:
+      oauth_validator_libraries: "entra_validator"
+      entra.expected_issuer: "https://login.microsoftonline.com/<ENTRA_TENANT_ID>/v2.0"
+      entra.identity_claim: "preferred_username"
+      entra.required_claim: "roles"
+      entra.required_values: "db_user"
+      entra.debug: "on"
+```
+
+**3. Add `pg_hba`** (in the `postgresql` section). If you completed Exercise 5,
+the `pooler` and `pgbouncer` cert rules are already present — add only the
+`pgadmin-proxy` and `oauth` lines:
+
+```yaml
+    pg_hba:
+      # mTLS for app service accounts (Exercise 5) — cert rules first
+      - hostssl all app       all cert map=pooler
+      - hostssl all pgbouncer all cert
+      # pgAdmin OAuth passthrough — cert auth using the proxy service cert
+      - hostssl all all all cert map=pgadmin-proxy
+      # Entra OAuth device flow for human users
+      - "hostssl all all all oauth issuer=\"https://login.microsoftonline.com/<ENTRA_TENANT_ID>/v2.0\" scope=\"api://<ENTRA_CLIENT_ID>/pg_access\" validator=\"entra_validator\""
+```
+
+**4. Add `pg_ident`** (in the `postgresql` section). The `pooler` line is from
+Exercise 5; the `pgadmin-proxy` line is new:
+
+```yaml
+    pg_ident:
+      # From Exercise 5 (mTLS pgbouncer pooler map)
+      - pooler pgbouncer app
+      # pgAdmin OAuth passthrough: proxy cert CN maps to any PG username
+      - "pgadmin-proxy pgadmin-proxy /^(.*)$/ \\1"
+```
+
+The `pg_hba` ordering matters: CNPG evaluates rules top-to-bottom, first match
+wins. The cert rules for `app` and `pgbouncer` come before the `oauth` rule so
+that mTLS service accounts are never asked to do OAuth. The `oauth` method only
+triggers when the client initiates SASL OAUTHBEARER (i.e., when `psql` is given
+`oauth_issuer`).
+
 Verify the result:
 
 ```bash
 git diff demo/yaml/eu/pg-eu.yaml
 ```
-
-You should see the `entra-validator` extension added, OAuth GUCs set, and new
-pg_hba rules for cert (pgAdmin proxy) and oauth (human users).
 
 ### Apply and wait for rolling restart
 
