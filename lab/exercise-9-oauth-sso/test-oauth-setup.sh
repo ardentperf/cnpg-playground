@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Exercise 9: Entra ID OAuth SSO setup script
+# Exercise 8: Entra ID OAuth SSO setup script
 #
 # This script configures the pg-eu cluster for Entra ID OAuth authentication
 # and deploys pgAdmin with OAuth identity passthrough.
@@ -24,7 +24,7 @@ CONTEXT="${KUBE_CONTEXT:-kind-k8s-eu}"
 export KUBECONFIG
 
 echo "============================================"
-echo "  Exercise 9: Entra ID OAuth SSO Setup"
+echo "  Exercise 8: Entra ID OAuth SSO Setup"
 echo "============================================"
 echo ""
 

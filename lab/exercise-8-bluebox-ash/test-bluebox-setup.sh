@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script automates the setup and verification of Exercise 8: Bluebox
+# This script automates the setup and verification of Exercise 9: Bluebox
 # Workload on CNPG with ASH Visualization.
 #
 # It performs the following steps:

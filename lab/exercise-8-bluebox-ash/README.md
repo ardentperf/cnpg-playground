@@ -1,4 +1,4 @@
-# Bluebox Workload on CNPG with ASH Visualization
+# Exercise 9: Bluebox Workload on CNPG with ASH Visualization
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)

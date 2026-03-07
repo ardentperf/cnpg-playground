@@ -1,4 +1,4 @@
-# Exercise 9: SSO with Microsoft Entra ID
+# Exercise 8: SSO with Microsoft Entra ID
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)

@@ -11,8 +11,8 @@ Welcome to the CloudNativePG Lab Exercises! Get set up, explore the playground, 
 | [Exercise 5: PgBouncer with mTLS Authentication](exercise-5-pgbouncer-mtls/README.md) | Configure connection pooling with PgBouncer using mutual TLS; set up a three-tier PKI with cert-manager; test certificate-based authentication with psql and pgbench. |
 | [Exercise 6: Cross-Cluster Replication with mTLS](exercise-6-cross-cluster-replication/README.md) | Bootstrap the `pg-us` replica cluster from `pg-eu` backup using mTLS; configure disaster recovery topology across EU and US Kubernetes clusters with unified PKI. |
 | [Exercise 7: pgAdmin for CNPG](exercise-7-pgadmin/README.md) | Deploy pgAdmin in desktop mode against `pg-eu` using the `kubectl cnpg pgadmin4` plugin command; explore the cluster schema, extensions, and active sessions visually. |
-| [Exercise 8: Bluebox Workload with ASH Visualization](exercise-8-bluebox-ash/README.md) | Load the bluebox DVD rental database onto `pg-eu` using the PostGIS extension container; drive continuous rental activity with Kubernetes CronJobs; visualize the workload in the ASH Grafana dashboard. |
-| [Exercise 9: SSO with Microsoft Entra ID](exercise-9-oauth-sso/README.md) | Configure Single Sign-On for PostgreSQL and pgAdmin using Microsoft Entra ID; authenticate human users via PG 18 OAuth device flow and pgAdmin cert passthrough — no separate database passwords needed. |
+| [Exercise 8: SSO with Microsoft Entra ID](exercise-9-oauth-sso/README.md) | Configure Single Sign-On for PostgreSQL and pgAdmin using Microsoft Entra ID; authenticate human users via PG 18 OAuth device flow and pgAdmin cert passthrough — no separate database passwords needed. |
+| [Exercise 9: Bluebox Workload with ASH Visualization](exercise-8-bluebox-ash/README.md) | Load the bluebox DVD rental database onto `pg-eu` using the PostGIS extension container; drive continuous rental activity with Kubernetes CronJobs; visualize the workload in the ASH Grafana dashboard. |
 
 ### Other Links
 
