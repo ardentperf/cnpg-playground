@@ -1,0 +1,43 @@
+# cert-manager resources for the pgAdmin OAuth identity passthrough certificate.
+#
+# This creates a client TLS certificate with CN=pgadmin-proxy, signed by the
+# CNPG cluster's CA. PostgreSQL uses this certificate to authenticate the
+# pgAdmin pod and maps the CN to any logged-in Entra user via pg_ident.
+#
+# Prerequisites:
+#   - cert-manager installed (see Exercise 5)
+#   - pg-eu cluster running (the CA secret pg-eu-ca must exist)
+#   - pg-eu-oauth.yaml.patch applied (adds cert map=pgadmin-proxy to pg_hba)
+#
+# Apply with:
+#   kubectl apply -f lab/exercise-9-oauth-sso/pgadmin-proxy-cert.yaml
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-eu-ca-issuer
+  namespace: default
+spec:
+  ca:
+    # This secret is created by CNPG when the cluster bootstraps.
+    # It contains the cluster's root CA certificate and key.
+    secretName: pg-eu-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pgadmin-proxy-cert
+  namespace: default
+spec:
+  secretName: pgadmin-proxy-cert
+  issuerRef:
+    name: pg-eu-ca-issuer
+    kind: Issuer
+  commonName: pgadmin-proxy
+  subject:
+    organizations:
+      - pgadmin-proxy
+  usages:
+    - client auth
+  duration: 8760h   # 1 year
+  renewBefore: 720h # renew 30 days before expiry

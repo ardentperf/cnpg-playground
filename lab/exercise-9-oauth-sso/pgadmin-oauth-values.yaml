@@ -1,0 +1,105 @@
+# pgAdmin Helm values for Entra ID OAuth SSO with identity passthrough.
+#
+# This configures pgAdmin to:
+#   1. Authenticate users via Microsoft Entra ID OAuth2
+#   2. Connect to PostgreSQL using a proxy TLS client certificate
+#      (so the logged-in Entra user's identity is passed through to PG)
+#
+# Prerequisites:
+#   - pgadmin-proxy-cert.yaml applied and cert ready
+#   - pg-eu-oauth.yaml.patch applied to pg-eu cluster
+#   - PostgreSQL roles created for your Entra users
+#
+# Install with:
+#   helm install pgadmin4-oauth oci://docker.io/dpage/pgadmin4-helm \
+#     -f lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml \
+#     --set config_local.data="$(
+#       sed \
+#         -e 's/ENTRA_TENANT_ID/<your-tenant-id>/g' \
+#         -e 's/ENTRA_CLIENT_ID/<your-client-id>/g' \
+#         -e 's/ENTRA_CLIENT_SECRET/<your-client-secret>/g' \
+#         lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml \
+#         | grep -A999 'config_local_data_start' | grep -B999 'config_local_data_end' \
+#       )"
+#
+# Or use test-oauth-setup.sh which handles substitution automatically.
+#
+# Access via:
+#   kubectl port-forward service/pgadmin4-oauth 8091:80
+#   http://localhost:8091  (click "Login with Microsoft")
+
+fullnameOverride: pgadmin4-oauth
+
+# Use the custom pgAdmin image with OAuth passthrough identity support
+image:
+  registry: ghcr.io
+  repository: ardentperf/pgadmin4
+  tag: x-ai-ardentperf-oauth-passthrough-identity
+
+# Disable built-in auth — Entra OAuth is the primary login method.
+# 'internal' is kept so a local admin account remains available.
+auth:
+  email: admin@pgadmin.org
+  password: admin
+
+persistence:
+  enabled: false
+
+# Mount the pgadmin-proxy client certificate (signed by CNPG's CA)
+extraVolumes:
+  - name: pgadmin-proxy-cert
+    secret:
+      secretName: pgadmin-proxy-cert
+
+extraVolumeMounts:
+  - name: pgadmin-proxy-cert
+    mountPath: /etc/pgadmin/proxy-cert
+    readOnly: true
+
+# pgAdmin configuration — replace placeholders with your Entra values
+# ENTRA_TENANT_ID  : Azure Directory (tenant) ID
+# ENTRA_CLIENT_ID  : App Registration Application (client) ID
+# ENTRA_CLIENT_SECRET : Client secret created in Entra app registration
+config_local:
+  enabled: true
+  data: |
+    AUTHENTICATION_SOURCES = ['oauth2', 'internal']
+    MASTER_PASSWORD_REQUIRED = False
+
+    # Where to find the proxy certificate for PostgreSQL cert auth
+    OAUTH_PASSTHROUGH_SSL_CERT = '/etc/pgadmin/proxy-cert/tls.crt'
+    OAUTH_PASSTHROUGH_SSL_KEY  = '/etc/pgadmin/proxy-cert/tls.key'
+
+    OAUTH2_CONFIG = [{
+        'OAUTH2_NAME':              'Microsoft Entra ID',
+        'OAUTH2_DISPLAY_NAME':      'Sign in with Microsoft',
+        'OAUTH2_CLIENT_ID':         'ENTRA_CLIENT_ID',
+        'OAUTH2_CLIENT_SECRET':     'ENTRA_CLIENT_SECRET',
+        'OAUTH2_TOKEN_URL':         'https://login.microsoftonline.com/ENTRA_TENANT_ID/oauth2/v2.0/token',
+        'OAUTH2_AUTHORIZATION_URL': 'https://login.microsoftonline.com/ENTRA_TENANT_ID/oauth2/v2.0/authorize',
+        'OAUTH2_USERINFO_ENDPOINT': 'https://graph.microsoft.com/oidc/userinfo',
+        'OAUTH2_JWKS_URI':          'https://login.microsoftonline.com/ENTRA_TENANT_ID/discovery/v2.0/keys',
+        'OAUTH2_SERVER_METADATA_URL': 'https://login.microsoftonline.com/ENTRA_TENANT_ID/v2.0/.well-known/openid-configuration',
+        'OAUTH2_USERNAME_CLAIM':    'preferred_username',
+        'OAUTH2_SCOPE':             'openid email profile',
+        'OAUTH2_AUTO_CREATE_USER':  True,
+    }]
+
+# Same security context fix as Exercise 7 (NET_BIND_SERVICE for python3.14)
+podSecurityContext:
+  fsGroup: 5050
+  runAsUser: 5050
+  runAsNonRoot: true
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 5050
+  seccompProfile:
+    type: Unconfined
+  capabilities:
+    add:
+      - NET_BIND_SERVICE
+    drop:
+      - ALL

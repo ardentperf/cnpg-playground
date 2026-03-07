@@ -1,0 +1,38 @@
+--- a/demo/yaml/eu/pg-eu.yaml
++++ b/demo/yaml/eu/pg-eu.yaml
+@@ -48,6 +48,30 @@
+       - name: postgis
+         image:
+           reference: ghcr.io/cloudnative-pg/postgis-extension:3.6.2-18-trixie
+         ld_library_path:
+           - system
++      - name: entra-validator
++        image:
++          reference: ghcr.io/ardentperf/postgres-entra-oauth-validator:18-dev-trixie
++        ld_library_path:
++          - system
+     shared_preload_libraries:
+       - pgsentinel
++    parameters:
++      oauth_validator_libraries: "entra_validator"
++      # Replace ENTRA_TENANT_ID with your Directory (tenant) ID
++      entra.expected_issuer: "https://login.microsoftonline.com/ENTRA_TENANT_ID/v2.0"
++      entra.identity_claim: "preferred_username"
++      entra.required_claim: "roles"
++      # Replace db_user with your Entra App Role value(s), comma-separated for multi-value
++      entra.required_values: "db_user"
++      entra.debug: "on"
++    pg_hba:
++      # mTLS for app service accounts (Exercise 5) — cert rules first so OAuth is not attempted
++      - hostssl all app      all cert map=pooler
++      - hostssl all pgbouncer all cert
++      # pgAdmin OAuth passthrough proxy — cert auth for the pgAdmin service cert
++      - hostssl all all all cert map=pgadmin-proxy
++      # Entra OAuth device flow for human users
++      # Replace ENTRA_TENANT_ID and ENTRA_APP_ID with your values
++      - "hostssl all all all oauth issuer=\"https://login.microsoftonline.com/ENTRA_TENANT_ID/v2.0\" scope=\"api://ENTRA_APP_ID/pg_access\" validator=\"entra_validator\""
++    pg_ident:
++      # From Exercise 5 (mTLS pgbouncer pooler map)
++      - pooler pgbouncer app
++      # pgAdmin OAuth passthrough: the proxy cert CN (pgadmin-proxy) can connect as any user
++      - "pgadmin-proxy pgadmin-proxy /^(.*)$/ \\1"
