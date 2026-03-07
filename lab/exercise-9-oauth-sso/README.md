@@ -1,17 +1,49 @@
 # Exercise 9: SSO with Microsoft Entra ID
 
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Architecture](#architecture)
+- [Step 1: Register an Entra Application](#step-1-register-an-entra-application)
+- [Step 2: Configure the pg-eu Cluster](#step-2-configure-the-pg-eu-cluster)
+- [Step 3: Create the pgAdmin Proxy Certificate](#step-3-create-the-pgadmin-proxy-certificate)
+- [Step 4: Create Your PostgreSQL Role](#step-4-create-your-postgresql-role)
+- [Step 5: Deploy pgAdmin with Entra OAuth](#step-5-deploy-pgadmin-with-entra-oauth)
+- [Step 6: Test psql OAuth Device Flow](#step-6-test-psql-oauth-device-flow)
+- [Step 7: Test pgAdmin OAuth](#step-7-test-pgadmin-oauth)
+- [Verifying Connections](#verifying-connections)
+- [How It Works](#how-it-works)
+- [Troubleshooting](#troubleshooting)
+- [Cleaning Up](#cleaning-up)
+- [Automation Script](#automation-script)
+
+## Overview
+
 This exercise demonstrates Single Sign-On (SSO) with Microsoft Entra ID (Azure AD)
 for both PostgreSQL and pgAdmin. Human users authenticate once with their corporate
 Entra identity and connect directly — no separate database passwords needed.
 
----
-
-## What You'll Learn
+What you'll learn:
 
 - How PostgreSQL 18's native OAuth device flow works with Entra ID
 - How the `entra_validator` extension validates JWT tokens offline
 - How pgAdmin can use your Entra identity to connect to PostgreSQL transparently
 - How OAuth authentication coexists with mTLS for service accounts (Exercise 5)
+
+## Prerequisites
+
+- **Exercise 2** completed: pg-eu cluster running on `kind-k8s-eu`
+- **Exercise 5** completed or cert-manager installed (needed for the pgAdmin proxy cert)
+  - If you haven't done Exercise 5, install cert-manager first:
+    ```bash
+    helm install cert-manager jetstack/cert-manager \
+      --namespace cert-manager --create-namespace \
+      --set crds.enabled=true
+    ```
+- **Free Microsoft account** (personal @outlook.com, @hotmail.com, or corporate)
+  — a free Azure subscription is not required for Entra app registrations
+- `kubectl`, `helm`, and `patch` in your PATH
+
+All commands should be run from the CNPG playground root directory (`~/cnpg-playground`).
 
 ## Architecture
 
@@ -65,24 +97,6 @@ Path B: pgAdmin + OAuth Identity Passthrough
 Both paths use the same Entra app registration. mTLS service accounts from
 Exercise 5 continue to work unchanged — pg_hba cert rules are evaluated first,
 so OAuth is only attempted for human connections using `psql` with OAuth flags.
-
----
-
-## Prerequisites
-
-- **Exercise 2** completed: pg-eu cluster running on `kind-k8s-eu`
-- **Exercise 5** completed or cert-manager installed (needed for proxy cert)
-  - If you haven't done Exercise 5, install cert-manager:
-    ```bash
-    helm install cert-manager jetstack/cert-manager \
-      --namespace cert-manager --create-namespace \
-      --set crds.enabled=true
-    ```
-- **Free Microsoft account** (personal @outlook.com, @hotmail.com, or corporate)
-  — a free Azure subscription is not required for Entra app registrations
-- `kubectl`, `helm`, `patch` in your PATH
-
----
 
 ## Step 1: Register an Entra Application
 
@@ -150,50 +164,179 @@ psql device flow and pgAdmin browser login.
 2. Find `"accessTokenAcceptedVersion": null` and change it to `"accessTokenAcceptedVersion": 2`
 3. Click **Save**
 
----
+## Step 2: Configure the pg-eu Cluster
 
-## Step 2: Run the Setup Script
+Apply the patch that adds the `entra_validator` extension and OAuth pg_hba rules
+to `pg-eu`. Substitute your actual Entra values before applying.
 
-The setup script handles all configuration automatically:
+### Apply the patch
 
 ```bash
-bash lab/exercise-9-oauth-sso/test-oauth-setup.sh
+patch -p1 < lab/exercise-9-oauth-sso/pg-eu-oauth.yaml.patch
 ```
 
-It will prompt for your Entra values, then:
-- Create the pgAdmin proxy certificate
-- Patch `pg-eu.yaml` with Entra GUCs and pg_hba rules
-- Wait for the cluster rolling restart
-- Create your PostgreSQL role
-- Deploy pgAdmin with Entra OAuth
-
----
-
-## Step 3: Test psql OAuth Device Flow
+Substitute your Tenant ID and Client ID into the patched file:
 
 ```bash
-# Start a temporary test pod with PG 18 client
-kubectl --context kind-k8s-eu run -it --rm psql-test \
+sed -i \
+  -e "s/ENTRA_TENANT_ID/<your-tenant-id>/g" \
+  -e "s/ENTRA_APP_ID/<your-client-id>/g" \
+  demo/yaml/eu/pg-eu.yaml
+```
+
+Verify the result:
+
+```bash
+git diff demo/yaml/eu/pg-eu.yaml
+```
+
+You should see the `entra-validator` extension added, OAuth GUCs set, and new
+pg_hba rules for cert (pgAdmin proxy) and oauth (human users).
+
+### Apply and wait for rolling restart
+
+```bash
+kubectl apply -f demo/yaml/eu/pg-eu.yaml
+kubectl wait --timeout 10m --for=condition=Ready pod -l cnpg.io/cluster=pg-eu
+kubectl wait --timeout 5m  --for=condition=Ready cluster/pg-eu
+```
+
+### Verify the extension loaded
+
+```bash
+kubectl exec pg-eu-1 -- psql -U postgres \
+  -c "SHOW oauth_validator_libraries;"
+```
+
+You should see `entra_validator`.
+
+## Step 3: Create the pgAdmin Proxy Certificate
+
+The pgAdmin identity passthrough relies on a TLS client certificate with
+`CN=pgadmin-proxy`, signed by the CNPG cluster's CA. cert-manager issues and
+rotates it automatically.
+
+```bash
+kubectl apply -f lab/exercise-9-oauth-sso/pgadmin-proxy-cert.yaml
+```
+
+Wait for the certificate to be issued:
+
+```bash
+kubectl wait --timeout 2m \
+  --for=condition=Ready certificate/pgadmin-proxy-cert
+```
+
+Verify the subject:
+
+```bash
+kubectl get secret pgadmin-proxy-cert \
+  -o jsonpath='{.data.tls\.crt}' \
+  | base64 -d | openssl x509 -noout -subject -dates
+```
+
+You should see `CN=pgadmin-proxy` and a validity period of ~1 year.
+
+## Step 4: Create Your PostgreSQL Role
+
+PostgreSQL needs a role matching your Entra identity. The `entra_validator`
+extension extracts `preferred_username` from the JWT (e.g.,
+`user@company.com`) and `pg_ident` maps it to a PG role. The conventional
+mapping replaces `@` and `.` with `_`:
+
+```bash
+# Derive your PG username from your UPN
+PG_USERNAME=$(echo "user@company.com" | tr '@.' '_')
+echo "PG username: $PG_USERNAME"
+```
+
+Create the role:
+
+```bash
+kubectl exec -i pg-eu-1 -- psql -U postgres <<SQL
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$PG_USERNAME') THEN
+    CREATE USER "$PG_USERNAME" LOGIN;
+    RAISE NOTICE 'Created role: $PG_USERNAME';
+  END IF;
+END
+\$\$;
+SQL
+```
+
+Verify:
+
+```bash
+kubectl exec pg-eu-1 -- psql -U postgres \
+  -c "SELECT rolname FROM pg_roles WHERE rolname = '$PG_USERNAME';"
+```
+
+## Step 5: Deploy pgAdmin with Entra OAuth
+
+The pgAdmin Helm chart uses a custom image with OAuth identity passthrough
+support. Substitute your Entra values, then install:
+
+```bash
+helm install pgadmin4-oauth oci://docker.io/dpage/pgadmin4-helm \
+  --kube-context kind-k8s-eu \
+  -f lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml \
+  --set-string "config_local.data=PLACEHOLDER" \
+  --wait --timeout 3m
+```
+
+> **Note:** The values file contains `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, and
+> `ENTRA_CLIENT_SECRET` placeholders. To substitute them before installing,
+> write the substituted values to a temporary file:
+>
+> ```bash
+> VALUES=$(mktemp --suffix=.yaml)
+> sed \
+>   -e "s/ENTRA_TENANT_ID/<your-tenant-id>/g" \
+>   -e "s/ENTRA_CLIENT_ID/<your-client-id>/g" \
+>   -e "s/ENTRA_CLIENT_SECRET/<your-client-secret>/g" \
+>   lab/exercise-9-oauth-sso/pgadmin-oauth-values.yaml > "$VALUES"
+>
+> helm install pgadmin4-oauth oci://docker.io/dpage/pgadmin4-helm \
+>   --kube-context kind-k8s-eu \
+>   -f "$VALUES" \
+>   --wait --timeout 3m
+>
+> rm -f "$VALUES"
+> ```
+
+Verify the pod is running:
+
+```bash
+kubectl get pods -l app=pgadmin4-oauth
+```
+
+## Step 6: Test psql OAuth Device Flow
+
+Start a temporary pod with the PostgreSQL 18 client:
+
+```bash
+kubectl run -it --rm psql-test \
   --image=ghcr.io/cloudnative-pg/postgresql:18-standard-trixie \
   --restart=Never -- bash
 ```
 
-Inside the pod:
+Inside the pod, connect using the OAuth device flow (replace the placeholders):
 
 ```bash
-# Connect using OAuth device flow
 psql "host=pg-eu-rw \
   user=<your-pg-username> \
   dbname=postgres \
-  oauth_issuer=https://login.microsoftonline.com/ENTRA_TENANT_ID/v2.0 \
-  oauth_client_id=ENTRA_CLIENT_ID \
-  oauth_scope=api://ENTRA_CLIENT_ID/pg_access"
+  oauth_issuer=https://login.microsoftonline.com/<ENTRA_TENANT_ID>/v2.0 \
+  oauth_client_id=<ENTRA_CLIENT_ID> \
+  oauth_scope=api://<ENTRA_CLIENT_ID>/pg_access"
 ```
 
-Replace `<your-pg-username>` with the username shown by the setup script
-(your UPN with `@` and `.` replaced by `_`).
+Your PG username is your UPN with `@` and `.` replaced by `_` — for example,
+`alice@contoso.com` becomes `alice_contoso_com`.
 
 psql will display:
+
 ```
 Visit https://microsoft.com/devicelogin and enter code: ABCD-1234
 ```
@@ -202,43 +345,39 @@ Open the URL in your browser, enter the code, sign in with your Entra account,
 and approve the permission request. psql will automatically connect.
 
 Verify your identity:
+
 ```sql
 SELECT current_user, session_user;
 ```
 
----
+## Step 7: Test pgAdmin OAuth
 
-## Step 4: Test pgAdmin OAuth
+Port-forward pgAdmin:
 
-1. Port-forward pgAdmin:
-   ```bash
-   kubectl --context kind-k8s-eu port-forward service/pgadmin4-oauth 8091:80 &
-   ```
+```bash
+kubectl --context kind-k8s-eu port-forward service/pgadmin4-oauth 8091:80 &
+```
 
-2. Open [http://localhost:8091](http://localhost:8091)
+Open [http://localhost:8091](http://localhost:8091) and click **Sign in with
+Microsoft**. Authenticate with your Entra account.
 
-3. Click **Sign in with Microsoft** and authenticate with your Entra account
+Register the pg-eu server with identity passthrough:
 
-4. Register the pg-eu server:
-   - **Object → Register → Server**
-   - **General**: Name = `pg-eu (Entra SSO)`
-   - **Connection**: Host = `pg-eu-rw`, Port = `5432`, Database = `postgres`
-     (leave Username and Password blank)
-   - **Advanced**: Enable **"Use OAuth identity for database connection"**
-   - Click **Save**
+1. **Object → Register → Server**
+2. **General**: Name = `pg-eu (Entra SSO)`
+3. **Connection**: Host = `pg-eu-rw`, Port = `5432`, Database = `postgres`
+   (leave Username and Password blank)
+4. **Advanced**: Enable **"Use OAuth identity for database connection"**
+5. Click **Save**
 
-5. pgAdmin will connect to PostgreSQL using:
-   - Your Entra `preferred_username` as the PG username
-   - The `pgadmin-proxy` TLS client certificate for authentication
-
----
+pgAdmin connects to PostgreSQL using the `pgadmin-proxy` TLS client certificate
+and presents your Entra `preferred_username` as the PG username.
 
 ## Verifying Connections
 
-On the primary pod:
+Run this on the primary pod to see all active connections and their auth methods:
 
 ```sql
--- Who is connected and how?
 SELECT
   usename,
   application_name,
@@ -252,13 +391,12 @@ ORDER BY pid;
 ```
 
 Expected results:
-- psql OAuth connections: `auth_method = oauth`, `usename = <your-pg-username>`
-- pgAdmin connections: `auth_method = cert`, `client_dn = CN=pgadmin-proxy`,
-  `usename = <your-pg-username>`
-- Service account connections (from Ex 5): `auth_method = cert`,
-  `usename = app` or `pgbouncer`
 
----
+| Connection | `auth_method` | `client_dn` | `usename` |
+|---|---|---|---|
+| psql OAuth | `oauth` | — | your PG username |
+| pgAdmin | `cert` | `CN=pgadmin-proxy` | your PG username |
+| app/pgbouncer (Ex 5) | `cert` | `CN=app` or similar | `app` |
 
 ## How It Works
 
@@ -269,14 +407,15 @@ PostgreSQL 18 implements [RFC 8628](https://www.rfc-editor.org/rfc/rfc8628)
 `oauth_issuer` in the connection string:
 
 1. libpq fetches `/.well-known/openid-configuration` to discover endpoints
-2. Sends a device authorization request and shows you the URL + code
+2. Sends a device authorization request and displays the URL + code
 3. Polls the token endpoint until you complete the browser login
 4. Sends the JWT access token to PostgreSQL via SASL OAUTHBEARER
 
 The `entra_validator` extension receives the token and:
+
 1. Checks the `iss` claim matches `entra.expected_issuer`
-2. Extracts the `preferred_username` claim as the identity
-3. Checks the `roles` array contains `db_user` (or any value in `entra.required_values`)
+2. Extracts the `preferred_username` claim as the identity (`authn_id`)
+3. Checks the `roles` array contains any value in `entra.required_values`
 4. Returns `authorized = true` and `authn_id = user@company.com`
 
 PostgreSQL then uses `pg_ident` to map the UPN to a local PG role.
@@ -286,50 +425,50 @@ PostgreSQL then uses `pg_ident` to map the UPN to a local PG role.
 The custom pgAdmin image (`ghcr.io/ardentperf/pgadmin4:x-ai-ardentperf-oauth-passthrough-identity`)
 adds the `OAUTH_PASSTHROUGH_SSL_CERT/KEY` feature:
 
-- When a user logs into pgAdmin via Entra OAuth, pgAdmin stores their `preferred_username`
+- When a user logs in via Entra OAuth, pgAdmin stores their `preferred_username`
 - When connecting to a server with "Use OAuth identity" enabled, pgAdmin:
   - Uses the proxy TLS client certificate (CN=`pgadmin-proxy`) for PG authentication
-  - Sets the PG username to the Entra `preferred_username` value
-- PostgreSQL's `pg_hba.conf` allows the `pgadmin-proxy` cert to connect as any user
-  via `pg_ident`
+  - Sets the PG username to the stored Entra `preferred_username`
+- PostgreSQL's `pg_hba.conf` allows the `pgadmin-proxy` cert to connect as any
+  user via `pg_ident` wildcard mapping
 
-The proxy certificate is signed by CNPG's CA, so no external CA is needed.
-
----
+The proxy certificate is signed by CNPG's own CA, so no external CA is needed.
 
 ## Troubleshooting
 
 **psql: `authentication method "oauth" requires SASL OAUTHBEARER`**
-- Make sure you're using PostgreSQL 18 client (`psql --version`)
-- The `libpq-oauth` package may need to be installed separately
+- Make sure you're using a PostgreSQL 18 client (`psql --version`)
+- The `libpq-oauth` package may need to be installed separately on some distros
 
 **psql: `FATAL: token issuer "https://..." does not match expected "..."`**
-- Check `entra.expected_issuer` in `postgresql.conf` matches your Tenant ID
-- View the cluster config: `kubectl get cluster pg-eu -o yaml | grep entra`
+- Check `entra.expected_issuer` in the cluster config matches your Tenant ID:
+  ```bash
+  kubectl get cluster pg-eu -o yaml | grep entra
+  ```
 
 **psql: `FATAL: authn_id not found in token`**
-- The token doesn't contain `preferred_username`; check your Entra manifest
-  has `"accessTokenAcceptedVersion": 2`
-- Try setting `entra.debug = on` and check PostgreSQL logs
+- The token is missing `preferred_username`; verify the Entra manifest has
+  `"accessTokenAcceptedVersion": 2`
+- Enable debug logging: set `entra.debug = on` in the cluster parameters
+  and check `kubectl logs pg-eu-1`
 
 **psql: `FATAL: token authorization failed`**
-- Your Entra account may not have the `db_user` App Role assigned
-- Check **Enterprise Applications** → `pg-oauth-lab` → **Users and groups**
-- Or set `entra.required_claim =` (empty) to disable role check
+- Your account may not have the `db_user` App Role assigned
+- Check: **Enterprise Applications** → `pg-oauth-lab` → **Users and groups**
+- To disable role checking: set `entra.required_claim = ""` in the cluster parameters
 
 **pgAdmin: certificate verify failed**
-- The proxy certificate may not be ready yet; check with:
+- The proxy certificate may not be ready yet:
   ```bash
   kubectl get certificate pgadmin-proxy-cert
   ```
 
 **pgAdmin: `pg_ident` mapping not working**
-- Check that the `pgadmin-proxy` map is in `pg_ident.conf`:
+- Check the `pgadmin-proxy` map is present:
   ```bash
-  kubectl exec pg-eu-1 -- psql -U postgres -c "SELECT * FROM pg_ident_file_mappings;"
+  kubectl exec pg-eu-1 -- psql -U postgres \
+    -c "SELECT * FROM pg_ident_file_mappings WHERE map_name = 'pgadmin-proxy';"
   ```
-
----
 
 ## Cleaning Up
 
@@ -342,7 +481,22 @@ kubectl --context kind-k8s-eu delete certificate pgadmin-proxy-cert
 kubectl --context kind-k8s-eu delete issuer pg-eu-ca-issuer
 kubectl --context kind-k8s-eu delete secret pgadmin-proxy-cert
 
-# Restore pg-eu.yaml to remove OAuth config
+# Restore pg-eu.yaml to remove OAuth config, then apply
 git checkout demo/yaml/eu/pg-eu.yaml
 kubectl --context kind-k8s-eu apply -f demo/yaml/eu/pg-eu.yaml
 ```
+
+## Automation Script
+
+After working through the exercise manually, you can validate the full setup
+end-to-end with the automation script:
+
+```bash
+bash lab/exercise-9-oauth-sso/test-oauth-setup.sh
+```
+
+The script prompts for your Entra values and then automates all steps: applying
+the cluster patch, waiting for the rolling restart, creating the proxy
+certificate, creating your PostgreSQL role, and deploying pgAdmin.
+
+Output is logged to `pgadmin-test_<timestamp>.log`.
