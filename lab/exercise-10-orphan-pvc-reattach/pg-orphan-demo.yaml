@@ -1,0 +1,30 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-orphan-demo
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+
+  storage:
+    size: 1Gi
+    storageClass: retain-local-path
+
+  walStorage:
+    size: 1Gi
+    storageClass: retain-local-path
+
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/postgres: ""
+    tolerations:
+    - key: node-role.kubernetes.io/postgres
+      operator: Exists
+      effect: NoSchedule
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: required
+
+  bootstrap:
+    initdb:
+      dataChecksums: true

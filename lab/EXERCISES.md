@@ -13,6 +13,7 @@ Welcome to the CloudNativePG Lab Exercises! Get set up, explore the playground, 
 | [Exercise 7: pgAdmin for CNPG](exercise-7-pgadmin/README.md) | Deploy pgAdmin in desktop mode against `pg-eu` using the `kubectl cnpg pgadmin4` plugin command; explore the cluster schema, extensions, and active sessions visually. |
 | [Exercise 8: SSO with Microsoft Entra ID](exercise-8-oauth-sso/README.md) | Configure Single Sign-On for PostgreSQL and pgAdmin using Microsoft Entra ID; authenticate human users via PG 18 OAuth device flow and pgAdmin cert passthrough — no separate database passwords needed. |
 | [Exercise 9: Bluebox Workload with ASH Visualization](exercise-9-bluebox-ash/README.md) | Load the bluebox DVD rental database onto `pg-eu` using the PostGIS extension container; drive continuous rental activity with Kubernetes CronJobs; visualize the workload in the ASH Grafana dashboard. |
+| [Exercise 10: Recovering a Deleted CNPG Cluster from Retained PVs](exercise-10-orphan-pvc-reattach/README.md) | Configure a Retain-reclaim StorageClass, delete a cluster on purpose, and reattach its orphaned PVs to a renamed cluster in a new namespace — CNPG's built-in orphan-PVC recovery path. |
 
 ### Other Links
 
